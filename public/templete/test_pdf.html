@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W-2 Form Replica</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #fff;
+            margin: 20px;
+        }
+
+        .w2-form {
+            width: 1300px;
+            border: 2px solid #000;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .w2-form td,
+        .w2-form th {
+            border: 1px solid #000;
+            padding: 3px;
+            vertical-align: top;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .input-field,
+        .textarea-field {
+            width: 95%;
+            border: none;
+            background: transparent;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .textarea-field {
+            resize: none;
+        }
+
+        .checkbox {
+            margin-right: 5px;
+        }
+
+        .title {
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+            padding-top: 5px;
+        }
+
+        .section-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+
+        .section-table td {
+            border: 1px solid #000;
+            padding: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table class="w2-form">
+        <tr>
+            <td colspan="2"><b>b</b> Employer identification number (EIN)<br><input class="input-field"></td>
+            <td colspan="6"><b>c</b> Employer's name, address, and ZIP code<br><textarea class="textarea-field"
+                    rows="3"></textarea></td>
+            <td colspan="4" rowspan="4">
+                <table class="section-table">
+                    <tr>
+                        <td>12a See instructions for Box 12</td>
+                    </tr>
+                    <tr>
+                        <td>12b<br>
+                            <hr>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12c<br>
+                            <hr>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12d<br>
+                            <hr>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>12e<br>
+                            <hr>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td colspan="2"><b>1</b> Wages, tips, other compensation<br><input class="input-field"></td>
+            <td colspan="2"><b>2</b> Federal income tax withheld<br><input class="input-field"></td>
+        </tr>
+
+        <tr>
+            <td colspan="8" rowspan="4">
+                <b>e/f</b> Employee's name, address, and ZIP code<br>
+                <textarea class="textarea-field" rows="6"></textarea>
+            </td>
+            <td colspan="2"><b>3</b> Social security wages<br><input class="input-field"></td>
+            <td colspan="2"><b>4</b> Social security tax withheld<br><input class="input-field"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><b>5</b> Medicare wages and tips<br><input class="input-field"></td>
+            <td colspan="2"><b>6</b> Medicare tax withheld<br><input class="input-field"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><b>7</b> Social security tips<br><input class="input-field"></td>
+            <td colspan="2"><b>8</b> Allocated tips<br><input class="input-field"></td>
+        </tr>
+
+        <tr>
+            <td colspan="8" style="height: 120px;">
+                <table class="section-table" style="height: 100%;">
+                    <tr>
+                        <td colspan="2"><b>9</b> Verification Code<br><input class="input-field"></td>
+                        <td colspan="2"><b>10</b> Dependent care benefits<br><input class="input-field"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><b>11</b> Nonqualified plans<br><input class="input-field"></td>
+                        <td colspan="2" rowspan="2">
+                            <b>13</b><br>
+                            <input type="checkbox" class="checkbox">Statutory employee<br>
+                            <input type="checkbox" class="checkbox" checked>Retirement plan<br>
+                            <input type="checkbox" class="checkbox">Third-party sick pay
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><b>14</b> Other<br><textarea class="textarea-field" rows="2"></textarea></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="16">
+                <b>REISSUED STATEMENT</b>
+                <table class="section-table">
+                    <tr>
+                        <td>15 State<br><input class="input-field"></td>
+                        <td>Employer's state ID number<br><input class="input-field"></td>
+                        <td>16 State wages, tips, etc<br><input class="input-field"></td>
+                        <td>17 State income tax<br><input class="input-field"></td>
+                        <td>18 Local wages, tips, etc<br><input class="input-field"></td>
+                        <td>19 Local income tax<br><input class="input-field"></td>
+                        <td>20 Locality name<br><input class="input-field"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="16" class="title">
+                Copy B — To Be Filed With Employee's FEDERAL Tax Return
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+</html>

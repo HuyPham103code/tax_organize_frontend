@@ -1,0 +1,224 @@
+[
+    {
+        "title": "1099-div",
+        "page_number": 1,
+        "form_type": "1099-DIV",
+        "data": [
+            {
+                "document_number": 1,
+                "Payer_Name": "MULTI-STRATEGY FUND LLC C/O STATE",
+                "Payer_TIN": "12-3456789",
+                "Account_Number": "1234",
+                "Payer_PostalCode": "02206",
+                "Payer_City": "BOSTON",
+                "Payer_State": "MA",
+                "Box1a": 5455.92,
+                "Box1b": 2234.56,
+                "Box2a": 1179.56,
+                "Box2b": 123456,
+                "Box2c": 1435.56,
+                "Box2d": 1234.56,
+                "Box7": 1565.12,
+                "Box9": 2565.12,
+                "Box10": 1129.12,
+                "Box12": 3505.45,
+                "Box13": 2512.12
+            }
+        ]
+    },
+    {
+        "title": "w2",
+        "page_number": 2,
+        "form_type": "W-2",
+        "data": [
+            {
+                "document_number": 1,
+                "SocialSecurityNumber": "987-65-4321",
+                "TS": "T",
+                "Employer_IdNumber": "12-3456789",
+                "Employer_Name": "APPLE INC.",
+                "Employer_Address_StreetAddress": "1234 EMPIRE AVENUE",
+                "Employer_Address_City": "BURBANK",
+                "Employer_Address_State": "CA",
+                "Employer_Address_PostalCode": "91504",
+                "ControlNumber": "",
+                "WagesTipsAndOtherCompensation": 39928.93,
+                "FederalIncomeTaxWithheld": 9882.68,
+                "SocialSecurityWages": 39928.93,
+                "SocialSecurityTaxWithheld": 2475.59,
+                "MedicareWagesAndTips": 39928.93,
+                "MedicareTaxWithheld": 578.97,
+                "SocialSecurityTips": "",
+                "AllocatedTips": "",
+                "DependentCareBenefits": "",
+                "NonQualifiedPlans": "",
+                "IsStatutoryEmployee": "false",
+                "IsRetirementPlan": "true",
+                "IsThirdPartySickPay": "false",
+                "StateTaxInfos": [
+                    {
+                        "State": "NY",
+                        "StateWagesTipsEtc": 39928.93,
+                        "StateIncomeTax": 2728.48
+                    },
+                    {
+                        "State": "",
+                        "StateWagesTipsEtc": "",
+                        "StateIncomeTax": ""
+                    }
+                ],
+                "LocalTaxInfos": [
+                    {
+                        "LocalWagesTipsEtc": 39928.93,
+                        "LocalIncomeTax": 1605.87
+                    },
+                    {
+                        "LocalWagesTipsEtc": "",
+                        "LocalIncomeTax": ""
+                    }
+                ]
+            },
+            {
+                "document_number": 2,
+                "SocialSecurityNumber": "987-65-4321",
+                "TS": "T",
+                "Employer_IdNumber": "12-3456789",
+                "Employer_Name": "APPLE INC.",
+                "Employer_Address_StreetAddress": "1234 EMPIRE AVENUE",
+                "Employer_Address_City": "BURBANK",
+                "Employer_Address_State": "CA",
+                "Employer_Address_PostalCode": "91504",
+                "ControlNumber": "",
+                "WagesTipsAndOtherCompensation": 39928.93,
+                "FederalIncomeTaxWithheld": 9882.68,
+                "SocialSecurityWages": 39928.93,
+                "SocialSecurityTaxWithheld": 2475.59,
+                "MedicareWagesAndTips": 39928.93,
+                "MedicareTaxWithheld": 578.97,
+                "SocialSecurityTips": "",
+                "AllocatedTips": "",
+                "DependentCareBenefits": "",
+                "NonQualifiedPlans": "",
+                "IsStatutoryEmployee": "false",
+                "IsRetirementPlan": "true",
+                "IsThirdPartySickPay": "false",
+                "StateTaxInfos": [
+                    {
+                        "State": "NY",
+                        "StateWagesTipsEtc": 39928.93,
+                        "StateIncomeTax": 2728.48
+                    },
+                    {
+                        "State": "",
+                        "StateWagesTipsEtc": "",
+                        "StateIncomeTax": ""
+                    }
+                ],
+                "LocalTaxInfos": [
+                    {
+                        "LocalWagesTipsEtc": 39928.93,
+                        "LocalIncomeTax": 1605.87
+                    },
+                    {
+                        "LocalWagesTipsEtc": "",
+                        "LocalIncomeTax": ""
+                    }
+                ]
+            },
+            {
+                "document_number": 3,
+                "SocialSecurityNumber": "987-65-4321",
+                "TS": "T",
+                "Employer_IdNumber": "12-3456789",
+                "Employer_Name": "APPLE INC.",
+                "Employer_Address_StreetAddress": "2300 EMPIRE AVENUE",
+                "Employer_Address_City": "BURBANK",
+                "Employer_Address_State": "CA",
+                "Employer_Address_PostalCode": "91504",
+                "ControlNumber": "",
+                "WagesTipsAndOtherCompensation": 39928.93,
+                "FederalIncomeTaxWithheld": 9882.68,
+                "SocialSecurityWages": 39928.93,
+                "SocialSecurityTaxWithheld": 2475.59,
+                "MedicareWagesAndTips": 39928.93,
+                "MedicareTaxWithheld": 578.97,
+                "SocialSecurityTips": "",
+                "AllocatedTips": "",
+                "DependentCareBenefits": "",
+                "NonQualifiedPlans": "",
+                "IsStatutoryEmployee": "false",
+                "IsRetirementPlan": "true",
+                "IsThirdPartySickPay": "false",
+                "StateTaxInfos": [
+                    {
+                        "State": "NY",
+                        "StateWagesTipsEtc": 39928.93,
+                        "StateIncomeTax": 2728.48
+                    },
+                    {
+                        "State": "",
+                        "StateWagesTipsEtc": "",
+                        "StateIncomeTax": ""
+                    }
+                ],
+                "LocalTaxInfos": [
+                    {
+                        "LocalWagesTipsEtc": 39928.93,
+                        "LocalIncomeTax": 1605.87
+                    },
+                    {
+                        "LocalWagesTipsEtc": "",
+                        "LocalIncomeTax": ""
+                    }
+                ]
+            },
+            {
+                "document_number": 4,
+                "SocialSecurityNumber": "987-65-4321",
+                "TS": "T",
+                "Employer_IdNumber": "12-3456789",
+                "Employer_Name": "APPLE INC.",
+                "Employer_Address_StreetAddress": "2300 EMPIRE AVENUE",
+                "Employer_Address_City": "BURBANK",
+                "Employer_Address_State": "CA",
+                "Employer_Address_PostalCode": "91504",
+                "ControlNumber": "",
+                "WagesTipsAndOtherCompensation": 39928.93,
+                "FederalIncomeTaxWithheld": 9882.68,
+                "SocialSecurityWages": 39928.93,
+                "SocialSecurityTaxWithheld": 2475.59,
+                "MedicareWagesAndTips": 39928.93,
+                "MedicareTaxWithheld": 578.97,
+                "SocialSecurityTips": "",
+                "AllocatedTips": "",
+                "DependentCareBenefits": "",
+                "NonQualifiedPlans": "",
+                "IsStatutoryEmployee": "false",
+                "IsRetirementPlan": "true",
+                "IsThirdPartySickPay": "false",
+                "StateTaxInfos": [
+                    {
+                        "State": "NY",
+                        "StateWagesTipsEtc": 39928.93,
+                        "StateIncomeTax": 2728.48
+                    },
+                    {
+                        "State": "",
+                        "StateWagesTipsEtc": "",
+                        "StateIncomeTax": ""
+                    }
+                ],
+                "LocalTaxInfos": [
+                    {
+                        "LocalWagesTipsEtc": 39928.93,
+                        "LocalIncomeTax": 1605.87
+                    },
+                    {
+                        "LocalWagesTipsEtc": "",
+                        "LocalIncomeTax": ""
+                    }
+                ]
+            }
+        ]
+    }
+]

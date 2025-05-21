@@ -1,0 +1,329 @@
+/* Centered wrapper box */
+.summary-wrapper {
+  background: white;
+  padding: 0px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  width: 90%;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* Main title */
+.summary-wrapper h2 {
+  margin-top: 10px;
+  margin-bottom: 2px;
+  color: #333;
+}
+.summary-wrapper p {
+  max-width: 500px;
+  margin: 10px  auto;
+}
+
+/* Checklist layout: 2 columns */
+.checklist-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+/* Each checklist column */
+.checklist-section {
+  flex: 1;
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: left;
+  max-height: 400px;
+  overflow: scroll;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE & Edge */
+}
+
+/* Section titles */
+.checklist-section h3 {
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+/* Lists */
+.checklist-section ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist-section li {
+  background: #fff;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
+}
+
+/* Red border for "Not Selected" list */
+.checklist-section:nth-child(3) li {
+  border-left-color: #dc3545;
+}
+
+
+.download-excel,
+.btn-send {
+  display: inline-block;
+  margin: 16px;
+  padding: 10px 20px;
+  background-color: #4f46e5;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.download-excel:hover,
+.btn-send:hover {
+  background-color: #3730a3;
+}
+
+.btn-send {
+  border: none;
+}
+
+
+/* client info + file attachment */
+.client-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.client-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.client-line {
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  margin-right: 6px;
+  font-size: 16px;
+  color: #5c5c5c;
+}
+
+.label {
+  margin-right: 4px;
+  color: #555;
+  min-width: 50px;
+  display: inline-block;
+}
+
+.client-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.saved-time {
+  color: #6a1b9a;
+  font-weight: 500;
+}
+
+.attachment {
+  background-color: #eee;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+
+
+
+/* new version */
+/* Wrapper toàn trang checklist */
+/* ===== PPC Checklist Container ===== */
+.checklist-group {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 15px;
+  background-color: transparent;
+}
+
+/* ===== Checklist List Container ===== */
+.checklist-group ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto; 
+  width: 100%;
+  max-height: 380px;
+  max-width: 480px;
+  overflow-y: scroll;
+
+  /* Hide scrollbar for modern browsers */
+  /* scrollbar-width: none; 
+  -ms-overflow-style: none; */
+}
+
+/* .checklist-group ul::-webkit-scrollbar {
+  display: none;
+} */
+
+/* ===== Checklist Item ===== */
+.checklist-group li {
+  background-color: #f4f6f8;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.checklist-group li:hover {
+  background-color: #f0f4ff;
+  border-color: #c7d2fe;
+}
+
+/* ===== Checklist Item - Active State ===== */
+.checklist-group li.active {
+  border-color: #3b82f6;
+  background-color: #eef2ff;
+  box-shadow: 0 0 0 2px #3b82f655;
+}
+
+/* ===== Checklist Label & Checkbox ===== */
+.checklist-group label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.checklist-group input[type="checkbox"] {
+  margin-right: 12px;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* ===== Expand Panel Section ===== */
+.expand-panel {
+  display: none;
+  margin-top: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Show expand-panel when li has .active */
+.checklist-group li.active .expand-panel {
+  display: flex;
+}
+
+/* ===== Buttons ===== */
+.btn-upload,
+.btn-secondary {
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.1s ease;
+}
+
+.btn-upload {
+  background-color: #3b82f6;
+  color: white;
+}
+.btn-upload > a{
+  text-decoration: none;
+}
+
+.btn-upload:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #e0e7ff;
+  color: #1e40af;
+}
+
+.btn-secondary:hover {
+  background-color: #c7d2fe;
+  transform: translateY(-1px);
+}
+
+/* ===== Optional: Action buttons at the bottom ===== */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  gap: 16px;
+}
+
+.action-buttons button {
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  background-color: #4f46e5;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.action-buttons button:hover {
+  background-color: #4338ca;
+}
+
+/* Ẩn checkbox mặc định */
+li input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #4b5563;
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Mặc định kiểu ✓ (PE) */
+li input[type="checkbox"].pe:checked::after {
+  content: "✔";
+  color: green;
+  font-size: 14px;
+  position: absolute;
+  left: 2px;
+  top: -2px;
+}
+
+/* Kiểu dấu X (NA) */
+li input[type="checkbox"].na:checked::after {
+  content: "🚫";
+  color: red;
+  font-size: 14px;
+  position: absolute;
+  left: -2px;
+  top: -2.5px;
+}

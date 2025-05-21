@@ -1,0 +1,473 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background-color: #f9f9f9;
+}
+
+.income-container {
+  display: flex;
+  max-width: 1600px;
+  margin: auto;
+  margin-left: 30px;
+  gap: 40px;
+  padding: 0 20px;
+  margin-top: 20px;
+}
+
+
+/* show the perious year */
+.last-year-box {
+  width: 700px;
+  background-color: #fffbea;
+  border-left: 6px solid #facc15;
+  padding: 20px;
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+  height: fit-content;
+  max-height: 450px;
+  max-width: 700px;
+  margin-right: 50px;
+  margin-top: 10px;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE & Edge */
+  
+}
+
+.checklist {
+  max-height: 300px;
+  max-width: 500px;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE & Edge */
+  padding-right: 5px; 
+  margin: 10px 0;
+}
+
+.last-year-box .checklist::-webkit-scrollbar {
+  width: 6px;
+}
+.last-year-box .checklist::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+
+.last-year-box strong {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.checklist {
+list-style-type: none; 
+padding-left: 0;       
+}
+
+
+.upload-section {
+  /* max-width: 600px; */
+  flex: 3;
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-section h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.upload-section p {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.upload-box {
+  border: 2px dashed #d1d5db;
+  background-color: #f9fafb;
+  padding: 10px;
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.upload-box input{
+  border: 2px solid #d1d5db;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 0 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.upload-box input:hover{
+  border: 2px solid #d1d5db;
+  background-color: #d5d5d6;
+}
+
+.upload-box a {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.uploaded-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f3f4f6;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  flex-direction: column;
+  list-style: none;
+  padding-left: 0;
+}
+.uploaded-file > li {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 30px;
+}
+
+/* download excel button */
+
+.download-excel-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.download-excel-btn:hover {
+  background-color: #2563eb;
+}
+
+.note-button {
+  display: inline-flex;
+  align-items: center;
+  background-color: #eef2ff;
+  color: #3b82f6;
+  border: 1px solid #c7d2fe;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.note-button:hover {
+  background-color: #dbeafe;
+}
+
+.note-button::before {
+  content: '📝';
+  margin-right: 6px;
+}
+
+
+/*============show detail json===============*/
+
+.detail-json-container{
+width: 380px;
+overflow-y: scroll;
+}
+
+#btn-show-json,
+#btn-download-json {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+#btn-show-json {
+  background-color: #007bff;
+}
+
+#btn-download-json {
+  background-color: #28a745;
+}
+
+/* JSON Tree Styling */
+
+#jsonContent {
+background-color: white;
+padding: 50px;
+width: 60vw;
+height: 80vh;
+max-width: 80vw;
+max-height: 80vh;
+overflow: auto;
+border-radius: 10px;
+position: relative;
+box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+#jsonContent button {
+position: absolute;
+top: 15px;
+right: 12px;
+background-color: red;
+color: white;
+border: none;
+font-weight: bold;
+font-size: 16px;
+padding: 4px 8px;
+cursor: pointer;
+border-radius: 4px;
+}
+
+/* JSON Tree Styling */
+.json-container {
+font-family: monospace;
+background: #f4f4f4;
+padding: 10px;
+border-radius: 5px;
+max-height: 60vh;
+/* handle scroll */
+overflow-y: auto;
+scrollbar-width: none; /* Firefox */
+-ms-overflow-style: none;  /* IE & Edge */
+}
+
+.json-list {
+list-style: none;
+padding-left: 20px;
+}
+
+.json-key {
+color: brown;
+font-weight: bold;
+}
+
+.json-value {
+color: navy;
+}
+
+.json-string {
+color: green;
+}
+
+/* Expand/Collapse */
+.json-toggle {
+color: blue;
+cursor: pointer;
+font-weight: bold;
+margin-right: 5px;
+}
+
+.json-collapsed {
+display: none;
+}
+
+
+/* show layout checklist result*/
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.checklist-container {
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.checklist > li  {
+  padding: 10px;
+  margin: 6px 0;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.checklist > li.checked {
+  background: #cce5ff;
+  font-weight: bold;
+  color: #077cf9;
+}
+
+.continue-btn {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.result_checklist ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-right: 20px;
+}
+
+.checklist-item {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #f1f5ff;
+  border-radius: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+
+/* downlaod button */
+.download-excel {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 20px;
+  background-color: #4f46e5;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.download-excel:hover {
+  background-color: #3730a3;
+}
+
+.download-excel.hidden {
+  display: none;
+}
+
+/* loadding  */
+#uploadBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#uploadBtn:disabled:hover {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* custom checked checklist  */
+
+.result_checklist1 input[type="checkbox"],
+.result_checklist-new-found1 input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 16px;
+  border: 2px solid #888;
+  border-radius: 4px;
+  vertical-align: middle;
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+/* Khi được chọn thì đổi màu nền */
+.result_checklist1 input[type="checkbox"]:checked ,
+.result_checklist-new-found1 input[type="checkbox"]:checked{
+  background-color: #3730a3; /* màu xanh lá */
+  border-color: #3730a3;
+}
+
+/* Thêm dấu check */
+.result_checklist1 input[type="checkbox"]:checked::after,
+.result_checklist-new-found1 input[type="checkbox"]:checked::after {
+  content: "✔";
+  color: white;
+  font-size: 12px;
+  position: absolute;
+  left: 2px;
+  top: -1px;
+}
+
+.result_checklist1 select,
+.result_checklist-new-found1 select {
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: fit-content;
+  max-width: 85%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.result_checklist1 select:focus,
+.result_checklist-new-found1 select:focus {
+  border-color: #377dff;
+  box-shadow: 0 0 0 2px rgba(55, 125, 255, 0.2);
+}
+
+
+.return-header-box {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 500px;
+}
+
+.return-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.return-header-item {
+  flex: 1 1 30%;
+  min-width: 200px;
+  margin-bottom: 5px;
+}
+
+.return-header-item strong {
+  display: inline-block;
+  min-width: 90px;
+}

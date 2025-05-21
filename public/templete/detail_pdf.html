@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/question.css">
+    <!-- <link rel="stylesheet" href="../css/home.css"> -->
+    <link rel="stylesheet" href="../css/upload_document.css">
+    <title>detail pdf files</title>
+    <style>
+        .income-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .active {
+            color: #1e40af !important;
+        }
+
+        .navbar {
+            /* margin: 15px; */
+            padding: 15px 30px;
+        }
+
+        /* new update */
+        .validation-table {
+            width: 700px;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+        }
+
+        .validation-table th,
+        .validation-table td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .validation-table td a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .input-disabled {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            background-color: #eee;
+        }
+
+        .link-select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #aaa;
+            border-radius: 6px;
+        }
+
+        .valid {
+            color: green;
+            font-weight: bold;
+        }
+
+        .invalid {
+            color: red;
+            font-weight: bold;
+        }
+
+        .confirm-btn {
+            padding: 8px 16px;
+            background-color: #2f80ed;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #1f5fc4;
+        }
+
+        .nav-buttons {
+            max-width: 700px;
+            margin: 20px auto;
+        }
+
+        .table-scroll-container {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        /* Đảm bảo table không bị co lại */
+        .validation-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .validation-table th,
+        .validation-table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        /* Cố định header */
+        .validation-table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fc;
+            z-index: 2;
+        }
+
+        .validation-table th:first-child,
+        .validation-table td:first-child {
+            width: 40px;
+            /* hoặc nhỏ hơn nữa nếu bạn muốn */
+            max-width: 40px;
+            text-align: center;
+        }
+
+
+        .confirm-wrapper {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* uploaded document */
+        .uploaded-documents {
+            flex: 1;
+            font-family: Arial, sans-serif;
+            margin-top: 1rem;
+        }
+
+        .uploaded-documents h3 {
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 0.5rem;
+        }
+
+        .document-group details {
+            margin-bottom: 0.8rem;
+            border-left: 2px solid #ccc;
+            padding-left: 10px;
+        }
+
+        .document-group summary {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 17px;
+            margin-bottom: 0.3rem;
+        }
+
+        .entity-list {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            font-size: 17px;
+            padding-left: 0;
+        }
+
+        .entity-list li {
+            margin-bottom: 4px;
+        }
+
+
+        /* detail pdf */
+        .detail_pdf {
+            flex: 3;
+            padding: 10px;
+            min-width: 0;
+            /* ✅ giúp iframe không bị co */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #pdfFrame {
+            width: 100%;
+            height: 85vh;
+            border: none;
+        }
+
+        /* show json data */
+
+
+        .detail-json-container {
+            /* height: 85vh; */
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .detail-json-container h2 {
+            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .result-overview {
+            /* height: 500px; */
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+
+        /* JSON Tree Styling */
+        .json-container {
+            font-family: monospace;
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 60vh;
+            /* overflow-y: auto; */
+        }
+
+        .json-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .json-key {
+            color: brown;
+            font-weight: bold;
+        }
+
+        .json-value {
+            color: navy;
+        }
+
+        .json-string {
+            color: green;
+        }
+
+        /* Expand/Collapse */
+        .json-toggle {
+            color: blue;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .json-collapsed {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="left">
+                <a href="../templete/home.html">
+                    <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" />
+                </a>
+            </div>
+
+            <div class="center">
+                <a href="../templete/basic_info.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
+                    </svg>
+                    Basic Info
+                </a>
+
+                <a href="../templete/document.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2 .667 2 2-.667 2-2 2m0-14c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z" />
+                    </svg>
+                    Upload Document
+                </a>
+
+                <a href="../templete/upload_summary.html" class="nav-item ">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 10h18M3 6h18a2 2 0 012 2v8a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                    Summary
+                </a>
+            </div>
+
+            <div class="right">
+                <div class="client-meta">
+                    <div class="client-details">
+                        <span class="client-line">
+                            <i class="icon">👤</i> <span class="label">Client:</span> <strong>John Doe</strong>
+                        </span>
+                        <span class="client-line">
+                            <i class="icon">✉️</i> <span class="label">Email:</span>
+                            <strong>john.doe@example.com</strong>
+                        </span>
+                        <div class="client-status">
+                            <span class="saved-time" id="saved-time">Not save</span>
+                            <span class="attachment" id="attachment-count">📎 0 Attachments</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- content -->
+        <div class="income-container">
+
+
+            <div class="uploaded-documents">
+                <h3>Uploaded Document</h3>
+
+                <div class="document-group">
+                    <details open>
+                        <summary>ABC.PDF</summary>
+                        <ul class="entity-list">
+                            <li>W-2 - ABC, INC 2024</li>
+                            <li>W-2 - XYZ, INC 2024</li>
+                            <li>1099-INT - BANK OF AMERICA - 1111</li>
+                        </ul>
+                    </details>
+
+                    <details open>
+                        <summary>XYZ.PDF</summary>
+                        <ul class="entity-list">
+                            <li>W-2 - 123, INC 2024</li>
+                            <li>1099-INT - BANK OF AMERICA - 2222</li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Right panel: Upload UI -->
+            <div class="detail_pdf">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
+
+
+            <div class="detail-json-container" id="json-overlay">
+                <div class="detail-json-modal">
+                    <h2>Tax Data</h2>
+                    <button class="close-btn" id="close-overlay">X</button>
+                    <div id="result-search-return-id">
+                        <div id="result-overview" class="result-overview"></div>
+                        <div id="result-buttons">
+                            <button id="btn-download-json" type="button">Download JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Loading indicator -->
+        <!-- <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div> -->
+
+    </div>
+    <!-- footer -->
+    <!-- <div class="nav-buttons">
+        <button type="button" onclick="history.back()">← Back</button>
+        <button type="submit" id="btn-selected-checklist">Continue →</button>
+    </div> -->
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const fileUrl = params.get("file_url");
+        console.log(fileUrl);
+        if (fileUrl) {
+            const iframe = document.getElementById("pdfFrame");
+            iframe.src = fileUrl;
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault(); // chặn hành vi lưu trang mặc định
+
+                // Cập nhật thời gian
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('saved-time').textContent = `✔️ Saved at ${hours}:${minutes}`;
+
+                // Giả lập tăng attachment count
+                const attachmentElement = document.getElementById('attachment-count');
+                const currentCount = parseInt(attachmentElement.textContent.match(/\d+/)[0]);
+                attachmentElement.textContent = `📎 ${currentCount + 1} Attachments`;
+            }
+        });
+
+
+        importHistory = localStorage.getItem("importHistory");
+
+        if (importHistory) {
+            importedHistory = JSON.parse(importHistory);
+        }
+        if (importedHistory != '') {
+            importedHistory.forEach(history => {
+                const result = {
+                    recognized_documents: history.imported_json_data || []
+                };
+                // appendRecognizedDocsToTable(result);
+                renderUploadedDocuments(importedHistory)
+            });
+        }
+
+        function renderUploadedDocuments(importHistory) {
+            const container = document.querySelector(".uploaded-documents .document-group");
+            container.innerHTML = ''; // Clear cũ
+
+            const seenKeys = new Set(); // Để lọc trùng
+            const displayFieldMappingImport = {
+                "W-2": ["Employer_Name", "TS"],
+                "1099-INT": ["Payer_Name", "Account_Number"],
+                "1099-DIV": ["Payer_Name", "Account_Number"],
+                "1099-R": ["Payer_Name"],
+                "Consolidated 1099": ["Payer name"],
+                "1099-SSA": ["TSJ"],
+                "K-1 1041": ["TSJ", "Name of k-1 entity"],
+                "K-1 1065": ["TSJ", "Partnership's name"],
+                "K-1 1120S": ["TSJ", "Corporation's name"]
+            };
+            // console.log(displayFieldMapping)
+            importHistory.forEach(importItem => {
+
+                // ✅ Lọc tất cả doc có ít nhất 1 entity với tax_year === "2024"
+                const validDocs = (importItem.imported_json_data || []).filter(doc =>
+                    (doc.data || []).some(entity => entity.tax_year === "2024")
+                );
+
+                if (validDocs.length === 0) return;
+
+                const fileName = importItem.imported_json_url?.split("/").pop() || "(unknown)";
+                const details = document.createElement("details");
+                details.open = true;
+
+                const summary = document.createElement("summary");
+                summary.textContent = fileName;
+                summary.dataset.url = importItem.pdf_path;
+                summary.style.cursor = "pointer";
+
+
+                summary.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const fileUrl = summary.dataset.url;
+                    if (!fileUrl) return;
+                    console.log(fileUrl)
+
+                    // Truyền thẳng URL (vì nó đã là URL đầy đủ, không encode)
+                    // window.open(fileUrl, "_blank"); ../templete/upload_summary.html
+                    window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                });
+
+                details.appendChild(summary);
+
+                const ul = document.createElement("ul");
+                ul.className = "entity-list";
+
+                (importItem.imported_json_data || []).forEach(doc => {
+                    const formType = doc.form_type;
+                    const mappingFields = displayFieldMappingImport[formType] || [];
+                    const entities = doc.data || [];
+
+                    entities.forEach(entity => {
+                        const key = formType + "|" + mappingFields.map(f => (entity[f] || "").toLowerCase()).join("|");
+                        if (seenKeys.has(key)) return;
+                        seenKeys.add(key);
+
+                        const displayText = mappingFields.map(f => entity[f] || "(missing)").join(" - ");
+                        const li = document.createElement("li");
+                        li.textContent = `${formType} - ${displayText}`;
+                        ul.appendChild(li);
+                    });
+                });
+
+                if (ul.children.length > 0) {
+                    details.appendChild(ul);
+                    container.appendChild(details);
+                }
+            });
+        }
+
+        //  showjson
+
+        const overlay = document.querySelector(".detail-json-container");
+        const closeBtn = document.getElementById("close-overlay");
+
+        closeBtn.addEventListener("click", () => {
+            overlay.style.display = "none";
+        });
+
+        overlay.style.display = "flex";
+        var imports = localStorage.getItem('importHistory');
+        if (imports) {
+            var data = JSON.parse(imports);
+            console.log(data)
+            for (const item of data) {
+                if (item.pdf_path === fileUrl) {
+                    console.log("✅ Found match:", item.imported_json_data[0]);
+                    displayJsonOverlay(item.imported_json_data[0])
+                    // Thực hiện hành động nếu cần
+                }
+            }
+
+            //displayJsonOverlay(data)
+        }
+
+        function displayJsonOverlay(data) {
+            const jsonBox = document.getElementById("result-overview");
+
+            // Chuyển JSON thành HTML dạng tree
+            jsonBox.innerHTML = generateJsonTree(data);
+
+            // Bắt sự kiện toggle sau khi đã render
+            jsonBox.querySelectorAll(".json-toggle").forEach(toggle => {
+                toggle.addEventListener("click", function () {
+                    const content = this.nextElementSibling;
+                    if (content) {
+                        const isCollapsed = content.classList.contains("json-collapsed");
+                        content.classList.toggle("json-collapsed", !isCollapsed);
+                        this.textContent = isCollapsed ? "[-] " : "[+] ";
+                    }
+                });
+            });
+
+            const btnDownload = document.getElementById("btn-download-json");
+            btnDownload.onclick = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "tax_data.json";
+                a.click();
+
+                URL.revokeObjectURL(url);
+            };
+        }
+
+        // 🟢 Chuyển JSON thành HTML tree có thể expand/collapse
+        function generateJsonTree(json, isRoot = true) {
+            if (typeof json !== "object" || json === null) {
+                return `<span class="json-value">${JSON.stringify(json)}</span>`;
+            }
+
+            const isArray = Array.isArray(json);
+            let html = `<div class="json-container">`;
+
+            if (!isRoot) { //onclick="toggleJsonTree(this)"
+                html += `<span class="json-toggle" >[+] </span>`;
+                html += `<div class="json-content json-collapsed">`;
+            }
+
+            html += isArray ? "[" : "{";
+            html += `<ul class="json-list">`;
+
+            for (const key in json) {
+                const value = json[key];
+                const isObject = typeof value === "object" && value !== null;
+                const keyLabel = isArray
+                    ? ""
+                    : `<span class="json-key">"${key}"</span>: `;
+
+                html += `<li>${keyLabel}`;
+
+                if (isObject) {
+                    html += generateJsonTree(value, false);
+                } else {
+                    html += `<span class="json-value">${JSON.stringify(value)}</span>`;
+                }
+
+                html += `,</li>`;
+            }
+
+            html += `</ul>${isArray ? "]" : "}"}`;
+
+            if (!isRoot) {
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        // document.querySelectorAll(".json-toggle").forEach(toggle => {
+        //     toggle.addEventListener("click", function () {
+        //         console.log("click")
+        //         const content = this.nextElementSibling;
+        //         if (content) {
+        //             const isCollapsed = content.classList.contains("json-collapsed");
+        //             content.classList.toggle("json-collapsed", !isCollapsed);
+        //             this.textContent = isCollapsed ? "[-] " : "[+] ";
+        //         }
+        //     });
+        // });
+
+    </script>
+    <!-- <script type="module" src="../js/upload_document.js"></script> -->
+
+</body>
+
+</html>

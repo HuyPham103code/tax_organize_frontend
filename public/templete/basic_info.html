@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/question.css">
+    <title>information form</title>
+    <style>
+        .active {
+            color: #1e40af !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="left">
+                <a href="../templete/home.html">
+                    <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" />
+                </a>
+            </div>
+
+            <div class="center">
+                <a href="../templete/basic_info.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
+                    </svg>
+                    Basic Info
+                </a>
+
+                <a href="../templete/document.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2 .667 2 2-.667 2-2 2m0-14c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z" />
+                    </svg>
+                    Upload Document
+                </a>
+
+                <a href="../templete/upload_summary.html" class="nav-item ">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 10h18M3 6h18a2 2 0 012 2v8a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                    Summary
+                </a>
+            </div>
+
+            <div class="right">
+                <div class="client-meta">
+                    <div class="client-details">
+                        <span class="client-line">
+                            <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John
+                                Doe</strong>
+                        </span>
+                        <span class="client-line">
+                            <i class="icon">✉️</i> <span class="label">Email:</span> <strong
+                                id="primary-email"></strong>
+                        </span>
+                        <div class="client-status">
+                            <span class="saved-time" id="saved-time">Not save</span>
+                            <span class="attachment" id="attachment-count">📎 0 Attachments</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- <div class="spouse-form">
+            <h2>Tell us about your info</h2>
+            <p>Please review the information we have on file.</p>
+        
+            <form id="spouseInfoForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First name</label>
+                        <input type="text" name="firstName" value="Julie" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label>Last name</label>
+                        <input type="text" name="lastName" value="Doe" />
+                    </div>
+        
+                    <div class="form-group full-width">
+                        <label>Social Security Number</label>
+                        <input type="password" value="*********" readonly />
+                    </div>
+        
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="text" name="dob" value="06/22/1988" />
+                    </div>
+        
+                    <div class="form-group">
+                        <label>Occupation</label>
+                        <input type="text" name="occupation" value="Teacher" />
+                    </div>
+        
+                    <div class="form-group full-width">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone" value="(212) 333-7777" />
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="filing-status">Filing Status</label>
+                        <select name="filing_status" id="filing-status" class="form-control">
+                            <option value="single">Single</option>
+                            <option value="married_filing_jointly">Married Filing Jointly</option>
+                            <option value="married_filing_separately">Married Filing Separately</option>
+                            <option value="head_of_household">Head of Household</option>
+                            <option value="qualifying_surviving_spouse">Qualifying Surviving Spouse</option>
+                        </select>
+                    </div>
+
+                </div>
+        
+                <div class="nav-buttons">
+                    <button type="button" onclick="history.back()">← Back</button>
+                    <button type="button" onclick="window.location.href='../templete/document.html'">Continue →</button>
+                </div>
+            </form>
+        </div> -->
+
+        <div class="spouse-form">
+            <h2>General Information</h2>
+            <div class="content-form">
+                <h3 style="margin: 5px;">Taxpayer Information</h3>
+                <div class="form-comparison-taxpayer" style="display: flex; gap: 40px;">
+                    <!-- Previous Year Form (read-only) -->
+                    <form id="spouseInfoFormPrevious" class="taxpayer_form1" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>First name</label>
+                                <input type="text" name="firstName" value="" id="taxpayer_firstname" disabled />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Social Security Number</label>
+                                <input type="text" value="" id="taxpayer_ssn" disabled />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Phone Number (Current)</label>
+                                <input type="text" name="phone" value="" id="taxpayer_phone_prior" disabled />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Occupation (Current)</label>
+                                <input type="text" name="occupation" value="" id="taxpayer_occupation_prior" disabled />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="filing-status">Filing Status (Current)</label>
+                                <select name="filing_status" id="taxpayer_filing-status_prior" class="form-control"
+                                    disabled>
+                                    <option value="single">Single</option>
+                                    <option value="married_filing_jointly">Married Filing Jointly</option>
+                                    <option value="married_filing_separately">Married Filing Separately</option>
+                                    <option value="head_of_household">Head of Household</option>
+                                    <option value="qualifying_surviving_spouse">Qualifying Surviving Spouse</option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </form>
+                    <!-- Current Year Form (editable) -->
+                    <form id="spouseInfoFormCurrent" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Last name</label>
+                                <input type="text" name="lastName" value="" id="taxpayer_lastname" disabled />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="text" name="dob" value="" id="taxpayer_dob" disabled />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Phone Number (Updated to)</label>
+                                <input type="text" name="phone" value="" id="taxpayer_phone" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Occupation (Updated to)</label>
+                                <input type="text" name="occupation" value="" id="taxpayer_occupation" />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="filing-status">Filing Status (Updated to)</label>
+                                <select name="filing_status" id="taxpayer_filing-status" class="form-control">
+                                    <option value="single">Single</option>
+                                    <option value="married_filing_jointly">Married Filing Jointly</option>
+                                    <option value="married_filing_separately">Married Filing Separately</option>
+                                    <option value="head_of_household">Head of Household</option>
+                                    <option value="qualifying_surviving_spouse">Qualifying Surviving Spouse</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+
+
+                <h3 style="margin: 10px;">Spouse Information</h3>
+                <div class="form-comparison-taxpayer" style="display: flex; gap: 40px;">
+                    <!-- Previous Year Form (read-only) -->
+                    <form id="spouseInfoFormPrevious" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>First name</label>
+                                <input type="text" name="firstName" value="" id="spouse_firstname" disabled />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Social Security Number</label>
+                                <input type="text" value="*****6666" id="spouse_ssn" disabled />
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Current Year Form (editable) -->
+                    <form id="spouseInfoFormCurrent" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Last name</label>
+                                <input type="text" name="lastName" value="Thompson" id="spouse_lastname" disabled />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="text" name="dob" value="01/01/1993" id="spouse_dob" disabled />
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <h3 style="margin: 10px;">Dependent Information</h3>
+                <div class="form-dependent" style="display: flex; gap: 40px; margin-left: 10px;">
+                    <!-- Previous Year Form (read-only) -->
+                    <!-- <form id="dependentInfoFormPrevious" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>First name</label>
+                                <input type="text" name="firstName" value="Mary" id="dependent_firstname" />
+                            </div>
+            
+                            <div class="form-group full-width">
+                                <label>Social Security Number</label>
+                                <input type="text" value="*****7777" id="dependent_ssn"/>
+                            </div>
+                        </div>
+                    </form> -->
+                    <!-- Current Year Form (editable) -->
+                    <!-- <form id="dependentInfoFormCurrent" style="flex: 1;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Last name</label>
+                                <input type="text" name="lastName" value="Williams" id="dependent_lastname"/>
+                            </div>
+            
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="text" name="dob" value="03/03/2015" id="dependent_dob"/>
+                            </div>
+                        </div>
+                    </form> -->
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" onclick="history.back()">← Back</button>
+                    <!-- <button type="button" onclick="window.location.href='../templete/document.html'">Continue →</button> -->
+                    <button type="button" id="btn-continue">Continue →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function renderInfo(data) {
+            // General → Taxpayer
+            const general = data.General || {};
+            console.log(general)
+            document.getElementById("taxpayer_firstname").value = general["First name - TP"] || "";
+            document.getElementById("taxpayer_lastname").value = general["Last name - TP"] || "";
+            document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+            document.getElementById("taxpayer_dob").value = general["Date of birth - TP"] || "";
+
+            document.getElementById("taxpayer_phone").value = general["Daytime / work phone no - TP"] || "";
+            document.getElementById("taxpayer_phone_prior").value = general["Daytime / work phone no - TP"] || "";
+
+            document.getElementById("taxpayer_occupation").value = general["Occupation - TP"] || "";
+            document.getElementById("taxpayer_occupation_prior").value = general["Occupation - TP"] || "";
+
+            document.getElementById("taxpayer_filing-status").value = mapFilingStatusToOption(general["Filing status"]);
+            document.getElementById("taxpayer_filing-status_prior").value = mapFilingStatusToOption(general["Filing status"]);
+
+            // General → Spouse
+            document.getElementById("spouse_firstname").value = general["First name - SP"] || "";
+            document.getElementById("spouse_lastname").value = general["Last name - SP"] || "";
+            document.getElementById("spouse_ssn").value = general["Social security number - SP"] || "";
+            document.getElementById("spouse_dob").value = general["Date of birth - SP"] || "";
+
+
+            const dependents = data.Dependents || [];
+            const container = document.querySelector(".form-dependent");
+            container.innerHTML = "";  // Xóa các form cứng ban đầu
+            dependents.forEach((dep, index) => {
+                const depHTML = `
+            <div class="dependent-block" style="display: flex; gap: 40px; margin-bottom: 20px;">
+                <!-- Previous Year Form -->
+                <form style="flex: 1;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First name</label>
+                            <input type="text" name="firstName"  value="${dep["First name"] || ""}"  />
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Social Security Number</label>
+                            <input type="text" name="ssn"  value="${dep["SSN"] || ""}"  />
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Current Year Form -->
+                <form style="flex: 1;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Last name</label>
+                            <input type="text" name="lastName"  value="${dep["Last name"] || ""}" />
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="text" name="dob"  value="${dep["Date of birth"] || ""}" />
+                        </div>
+                    </div>
+                </form>
+            </div>`;
+                container.insertAdjacentHTML("beforeend", depHTML);
+            });
+        }
+        //  load data from local storage
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log('do')
+            const jsonStr = localStorage.getItem("jsonData");
+            if (!jsonStr) return;
+
+            const data = JSON.parse(jsonStr);
+
+            // General → Taxpayer
+            const general = data.General || {};
+            console.log(general)
+            console.log(general["Primary email address"])
+            document.getElementById("primary-email").innerText = general["Primary email address"];
+            document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
+
+            document.getElementById("taxpayer_firstname").value = general["First name - TP"] || "";
+            document.getElementById("taxpayer_lastname").value = general["Last name - TP"] || "";
+            document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+            document.getElementById("taxpayer_dob").value = general["Date of birth - TP"] || "";
+
+            document.getElementById("taxpayer_phone").value = general["Daytime / work phone no - TP"] || "";
+            document.getElementById("taxpayer_phone_prior").value = general["Daytime / work phone no - TP"] || "";
+
+            document.getElementById("taxpayer_occupation").value = general["Occupation - TP"] || "";
+            document.getElementById("taxpayer_occupation_prior").value = general["Occupation - TP"] || "";
+
+            console.log(mapFilingStatusToOption(general["Filing status"]))
+            document.getElementById("taxpayer_filing-status").value = mapFilingStatusToOption(general["Filing status"]);
+            document.getElementById("taxpayer_filing-status_prior").value = mapFilingStatusToOption(general["Filing status"]);
+
+            // General → Spouse
+            document.getElementById("spouse_firstname").value = general["First name - SP"] || "";
+            document.getElementById("spouse_lastname").value = general["Last name - SP"] || "";
+            document.getElementById("spouse_ssn").value = general["Social security number - SP"] || "";
+            document.getElementById("spouse_dob").value = general["Date of birth - SP"] || "";
+
+
+            const dependents = data.Dependents || [];
+            const container = document.querySelector(".form-dependent");
+            container.innerHTML = "";  // Xóa các form cứng ban đầu
+            dependents.forEach((dep, index) => {
+                const depHTML = `
+            <div class="dependent-block" style="display: flex; gap: 40px; margin-bottom: 20px;">
+                <!-- Previous Year Form -->
+                <form style="flex: 1;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First name</label>
+                            <input type="text" name="firstName" disabled value="${dep["First name"] || ""}"  />
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Social Security Number</label>
+                            <input type="text" name="ssn" disabled value="${dep["SSN"] || ""}"  />
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Current Year Form -->
+                <form style="flex: 1;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Last name</label>
+                            <input type="text" name="lastName" disabled value="${dep["Last name"] || ""}" />
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="text" name="dob" disabled value="${dep["Date of birth"] || ""}" />
+                        </div>
+                    </div>
+                </form>
+            </div>`;
+                container.insertAdjacentHTML("beforeend", depHTML);
+            });
+        });
+
+        // Hàm map lại chuỗi Filing status từ JSON về giá trị option
+        function mapFilingStatusToOption(value) {
+            if (!value) return "";
+            const map = {
+                "Single": "single",
+                "Married filing jointly (even if only one had income)": "married_filing_jointly",
+                "Married filing separately": "married_filing_separately",
+                "Head of Household": "head_of_household",
+                "Qualifying Surviving Spouse": "qualifying_surviving_spouse"
+            };
+            return map[value] || "";
+        }
+
+        function mapOptionToFilingStatus(optionValue) {
+            if (!optionValue) return "";
+            const reverseMap = {
+                "single": "Single",
+                "married_filing_jointly": "Married filing jointly (even if only one had income)",
+                "married_filing_separately": "Married filing separately",
+                "head_of_household": "Head of Household",
+                "qualifying_surviving_spouse": "Qualifying Surviving Spouse"
+            };
+            return reverseMap[optionValue] || "";
+        }
+
+        // update local storage
+        document.getElementById('btn-continue').addEventListener("click", async function () {
+            const rawData = localStorage.getItem("jsonData");
+            if (!rawData) return;
+
+            const data = JSON.parse(rawData);
+
+            // === General fields ===
+            const general = data.General || {};
+
+            // Taxpayer fields
+            general["First name - TP"] = document.getElementById("taxpayer_firstname")?.value || "";
+            general["Last name - TP"] = document.getElementById("taxpayer_lastname")?.value || "";
+            general["Date of birth - TP"] = document.getElementById("taxpayer_dob")?.value || "";
+            general["Occupation - TP"] = document.getElementById("taxpayer_occupation")?.value || "";
+            general["Daytime / work phone no - TP"] = document.getElementById("taxpayer_phone")?.value || "";
+            const selectedOption = document.getElementById("taxpayer_filing-status")?.value || "";
+            console.log(selectedOption)
+            general["Filing status"] = mapOptionToFilingStatus(selectedOption);
+            // general["Filing status"] = document.getElementById("taxpayer_filing-status")?.value || "";
+
+            // Spouse fields
+            general["First name - SP"] = document.getElementById("spouse_firstname")?.value || "";
+            general["Last name - SP"] = document.getElementById("spouse_lastname")?.value || "";
+            general["Date of birth - SP"] = document.getElementById("spouse_dob")?.value || "";
+
+            // === Dependents ===
+            const dependentBlocks = document.querySelectorAll(".dependent-block");
+            const updatedDependents = [];
+            const originalDependents = data.Dependents || [];
+
+            dependentBlocks.forEach(block => {
+                const firstName = block.querySelector("input[name='firstName']")?.value || "";
+                const lastName = block.querySelector("input[name='lastName']")?.value || "";
+                const dob = block.querySelector("input[name='dob']")?.value || "";
+                const ssn = block.querySelector("input[name='ssn']")?.value || "";
+
+                // updatedDependents.push({
+                //     "First name": firstName,
+                //     "Last name": lastName,
+                //     "Date of birth": dob,
+                //     "SSN": ssn
+                // });
+
+                // Tìm dependent gốc theo SSN
+                const existing = originalDependents.find(dep => dep["SSN"] === ssn) || {};
+
+                updatedDependents.push({
+                    ...existing,
+                    "First name": firstName,
+                    "Last name": lastName,
+                    "Date of birth": dob,
+                    "SSN": ssn
+                });
+
+            });
+
+            data.General = general;
+            data.Dependents = updatedDependents;
+            // console.log(data)
+
+            // === Tạo payload và gửi API ===
+            console.log("check")
+            const payload = {
+                general,
+                dependents: updatedDependents
+            };
+
+            // const returnId = data?.ReturnHeader?.ReturnType + data?.ReturnHeader?.TaxYear +
+            //                 ":" + data?.ReturnHeader?.ClientID + ":V" + data?.ReturnHeader?.ReturnVersion;
+
+            const returnId = `${data?.ReturnHeader?.TaxYear}${data?.ReturnHeader?.ReturnType}:${data?.ReturnHeader?.ClientID}:V${data?.ReturnHeader?.ReturnVersion}`;
+
+            console.log(payload)
+            console.log(returnId)
+            // return 0
+            localStorage.setItem("jsonData", JSON.stringify(data));
+            renderInfo(data)
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/cch-import/update-basic-information/${returnId}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    console.log("✅ Cập nhật thành công");
+                    window.location.href = "../templete/document.html";
+                } else {
+                    console.error("❌ API lỗi:", await response.text());
+                    alert("Cập nhật thất bại!");
+                }
+            } catch (error) {
+                console.error("❌ Lỗi mạng:", error);
+                alert("Không thể kết nối đến máy chủ.");
+            }
+
+
+            // window.location.href = "../templete/document.html";
+
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 's') {
+                save_attachments()
+            }
+        });
+
+        function save_attachments() {
+            var importedHistory = ''
+            var importHistory = localStorage.getItem("importHistory");
+            if (importHistory) {
+                importedHistory = JSON.parse(importHistory);
+            }
+            console.log(importedHistory)
+            var count = importedHistory.length
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            var import_time = `${hours}:${minutes}`
+            if (count > 0) {
+                // Sắp xếp theo thời gian giảm dần
+                importedHistory.sort((a, b) => new Date(b.imported_at) - new Date(a.imported_at));
+
+                // Lấy record đầu tiên (mới nhất)
+                var latestImport = importedHistory[0];
+                var latestTime = new Date(latestImport.imported_at);
+                import_time = latestTime
+                import_time = formatDate(import_time)
+                console.log("Latest import time:", latestTime.toLocaleString());  // Hiển thị định dạng dễ đọc
+                console.log("Latest file:", latestImport.imported_json_url);     // Có thể dùng tên file nếu cần
+            }
+            function formatDate(dateStr) {
+                const date = new Date(dateStr);
+
+                const MM = String(date.getMonth() + 1).padStart(2, '0');
+                const DD = String(date.getDate()).padStart(2, '0');
+                const YYYY = date.getFullYear();
+
+                const HH = String(date.getHours()).padStart(2, '0');
+                const mm = String(date.getMinutes()).padStart(2, '0');
+                const SS = String(date.getSeconds()).padStart(2, '0');
+
+                return `${MM}:${DD}:${YYYY} ${HH}:${mm}:${SS}`;
+            }
+
+            event.preventDefault(); // chặn hành vi lưu trang mặc định
+
+            // Cập nhật thời gian
+
+            document.getElementById('saved-time').textContent = `✔️ Saved at ${import_time}`;
+
+            // Giả lập tăng attachment count
+            const attachmentElement = document.getElementById('attachment-count');
+            const currentCount = parseInt(attachmentElement.textContent.match(/\d+/)[0]);
+            attachmentElement.textContent = `📎 ${count} Attachments`;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            save_attachments()
+        })
+
+    </script>
+
+</body>
+
+</html>

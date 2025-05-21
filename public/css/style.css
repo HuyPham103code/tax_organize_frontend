@@ -1,0 +1,64 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 200px;
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.sidebar ul li:hover {
+    background: #34495e;
+}
+
+/* Navbar trung tâm */
+.navbar {
+    width: 250px;
+    background: #ecf0f1;
+    padding: 20px;
+}
+
+.navbar h2 {
+    margin-bottom: 10px;
+}
+
+.navbar button {
+    display: block;
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    cursor: pointer;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}

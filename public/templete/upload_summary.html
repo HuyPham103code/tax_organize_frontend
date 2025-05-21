@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/question.css">
+    <link rel="stylesheet" href="../css/upload_summary.css">
+
+    <title>upload sumary</title>
+    <style>
+        .active {
+            color: #1e40af !important;
+        }
+
+        .navbar {
+            /* margin: 15px; */
+            padding: 15px 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="left">
+                <a href="../templete/home.html">
+                    <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" />
+                </a>
+            </div>
+
+            <div class="center">
+                <a href="../templete/basic_info.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
+                    </svg>
+                    Basic Info
+                </a>
+
+                <a href="../templete/document.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2 .667 2 2-.667 2-2 2m0-14c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z" />
+                    </svg>
+                    Upload Document
+                </a>
+
+                <a href="../templete/upload_summary.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 10h18M3 6h18a2 2 0 012 2v8a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                    Summary
+                </a>
+            </div>
+
+            <div class="right">
+                <div class="client-meta">
+                    <div class="client-details">
+                        <span class="client-line">
+                            <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John Doe</strong>
+                        </span>
+                        <span class="client-line">
+                            <i class="icon">✉️</i> <span class="label">Email:</span> <strong id="primary-email"></strong>
+                        </span>
+                        <div class="client-status">
+                            <span class="saved-time" id="saved-time">Not save</span>
+                            <span class="attachment" id="attachment-count">📎 0 Attachments</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- content -->
+        <div class="summary-wrapper">
+            <h2>PPC List Summary</h2>
+            <p>Please double-check if there are any missing documents for this year. Click "Complete" 
+                once all documents are addressed.</p>
+
+            <!-- <div class="checklist-group" id="checklist-group">
+                <ul id="checklist"></ul>
+            </div> -->
+
+            <div class="checklist-group">
+                <ul id="checklist">
+                    <li>
+                        <label>
+                            <input type="checkbox">
+                            W-2 (Physicians Wellness - S)
+                        </label>
+                        <div class="expand-panel">
+                            <button class="btn-upload">Upload</button>
+                            <button class="btn-secondary">Not Applicable</button>
+                            <button class="btn-secondary">Provided Elsewhere</button>
+                        </div>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="checkbox">
+                            W-2 (APPLE INC. - T)
+                        </label>
+                        <div class="expand-panel">
+                            <button class="btn-upload">Upload</button>
+                            <button class="btn-secondary">Not Applicable</button>
+                            <button class="btn-secondary">Provided Elsewhere</button>
+                        </div>
+                    </li>
+                    <!-- Copy thêm nhiều li tương tự -->
+                </ul>
+            </div>
+
+            
+            <button id="btn-send-to-client" class="btn-send">Save</button>
+            <div id="alert-placeholder-send-client" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+    </div>
+
+    <script>
+
+    </script>
+    <script src="../js/upload_summary.js" type="module">
+    </script>
+
+</body>
+
+</html>

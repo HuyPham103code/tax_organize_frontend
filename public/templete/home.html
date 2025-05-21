@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SilverSea Tax Automation Platform</title>
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" href="../css/home.css">
+    <link rel="stylesheet" href="../css/result.css">
+    <!-- Bootstrap 5 CSS -->
+
+    <style>
+        .hidden {
+            display: none !important;
+        }
+
+        .show {
+            display: block !important;
+            visibility: visible;
+            opacity: 1;
+        }
+
+
+        /* update ui */
+        /* Checklist container item */
+        /* Checklist container item */
+        .checklist-item {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 6px;
+            margin-bottom: 8px;
+            background: #fff;
+        }
+
+        /* Highlight nếu là new-found */
+        .checklist-item.new-found {
+            border-color: #2f80ed;
+            background: #fff !important;
+        }
+
+        /* Box header (checkbox + nút toggle) */
+        .checklist-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background-color: #fff;
+            transition: background-color 0.2s ease;
+        }
+
+        .checklist-box.checked {
+            background-color: #ccc;
+        }
+
+        /* Label checkbox + text */
+        .checklist-label {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            font-size: 15px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .checklist-label input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            accent-color: #2fed7e;
+            color: #fff;
+        }
+
+        /* Nút dropdown */
+        .dropdown-btn {
+            background-color: rgb(255, 255, 255);
+            color: #ccc;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-btn:hover {
+            background-color: rgb(255, 255, 255);
+        }
+
+        /* Chi tiết mở rộng */
+        .checklist-details {
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding: 14px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .checklist-details.hidden {
+            display: none;
+        }
+
+        /* Nhóm các nút */
+        .button-group {
+            display: flex;
+            justify-content: flex-start;
+            /* canh trái */
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .button-group button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            border: 1.5px solid #2f80ed;
+            background-color: white;
+            color: #2f80ed;
+        }
+
+        /* Nút "Upload" riêng có nền xanh */
+        .button-group button:first-child {
+            background-color: #2f80ed;
+            color: #fff;
+            border: none;
+        }
+
+        .button-group button:hover {
+            background-color: #e6f0ff;
+            color: #333;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none;
+        }
+
+        .checklist-this-year {
+            max-height: 400px;
+            overflow-y: scroll;
+        }
+
+
+
+        /*============show detail json===============*/
+        .detail-json-container {
+            /* width: 380px; */
+            /* max-height: 300px; */
+            overflow-y: scroll;
+        }
+
+        #btn-show-json,
+        #btn-download-json {
+            padding: 6px 12px;
+            margin: auto;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+        }
+
+        #btn-download-json {
+            background-color: #28a745;
+        }
+
+        /* JSON Tree Styling */
+        #jsonContent {
+            background-color: white;
+            padding: 30px;
+            width: 60vw;
+            height: 250px;
+            max-width: 80vw;
+            max-height: 200px !important;
+            overflow: auto;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #jsonContent button {
+            position: absolute;
+            top: 15px;
+            right: 12px;
+            background-color: red;
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* JSON Tree Styling */
+        .json-container {
+            font-family: monospace;
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 250px;
+            /* handle scroll */
+            overflow-y: auto;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE & Edge */
+        }
+
+        .json-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .json-key {
+            color: brown;
+            font-weight: bold;
+        }
+
+        .json-value {
+            color: navy;
+        }
+
+        .json-string {
+            color: green;
+        }
+
+        /* Expand/Collapse */
+        .json-toggle {
+            color: blue;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .json-collapsed {
+            display: none;
+        }
+
+
+        /* ====================table checklist================= */
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .document-table th,
+        .document-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .doc-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .status-tag {
+            background-color: #ffe9dd;
+            color: #c0392b;
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 6px 10px;
+            margin: 0 2px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .export-btn {
+            background-color: #e0f0ff;
+            color: #007bff;
+        }
+
+        .delete-btn {
+            background-color: #ffe5e5;
+            color: #e74c3c;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .document-table thead {
+            background-color: #f0f0f0;
+            /* Màu xám nhạt */
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .table-container {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
+        .center-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        /* ======pbc list button box======= */
+        .pbclist-button-box,
+        .pbclist-button-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .pbclist-button-box-header {
+            max-width: 350px;
+            margin-bottom: 15px;
+        }
+
+        /* Fix new json */
+
+        .detail-json-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            /* overlay màu xám đậm */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .detail-json-modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .detail-json-modal .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            background: #eee;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <!-- <h1>SilverSea Tax Organize</h1> -->
+        <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" onclick="location.reload();" />
+        <nav>
+            <span>Welcome, User</span>
+            <a href="./signup.html">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Menu</h2>
+            <ul>
+                <li class="tab-link active" data-tab="download">Tax Organizer</li>
+                <li class="tab-link " data-tab="import">Import 1040 to Axcess Tax</li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+            <!--==========================================================-->
+            <!-- Download Data Tab -->
+            <div class="tab-content active" id="download">
+
+                <!-- conenction button -->
+                <!-- <div class="connection--container">
+                    <h2 style="margin-bottom: 10px;">1. Check CCH API connection </h2>
+                    <div class="download-section">
+                        <p class="section-desc">Click here to test conenction with CCH</p>
+                        <button id="connect-btn" type="button">Connect </button>
+                        <div id="alert-placeholder-connectAPI" style="margin-top: 15px;"></div>
+                    </div>
+                </div> -->
+
+
+                <!-- header return -->
+                <div></div>
+                <!-- search return ID -->
+                <div class="download--container">
+                    <h2 id="title-download" class="title-download">Search for Tax Return ID</h2>
+                    <div class="download-section">
+                        <!-- ===fix -->
+                        <div class="button-box" id="button_box">
+                            <p class="section-desc">Click to get the list of returns. Please wait — this may take some
+                                time.
+                            </p>
+                            <div class="input-box">
+                                <input type="text" placeholder="Filter by Client ID/SubID, Tax Year or Version"
+                                    id="search-return-value">
+                                <button id="search-list-returns-btn" type="button">Search</button>
+                                <button id="get-list-returns-btn" type="button">Sync tax data</button>
+                            </div>
+                        </div>
+
+
+                        <div class="list-returns" id="list-returns" style="display: none;">
+                            <table class="list-returns-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tax Return ID</th>
+                                        <th>PBC List progress</th>
+                                        <th>PBC Status</th>
+                                        <th>Last Update</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-returns-table-body">
+                                    <!-- <tr>
+                                        <td>2024I:1234567.001:V5</td>
+                                        <td>0/24</td>
+                                        <td>Client - Complete</td>
+                                        <td>5/20/2025 - 10:00:00</td>
+                                        <td><input type="checkbox" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2024I:1234567.001:V6</td>
+                                        <td>Not Generated</td>
+                                        <td>Not Generated</td>
+                                        <td>Not Generated</td>
+                                        <td><input type="checkbox" /></td>
+                                    </tr> -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ===fix -->
+
+
+                        <div class="search-container" style="display: none;" id="search-container">
+                            <!-- <input type="text" placeholder="Enter Tax Return ID" id="search-return-value"> -->
+                            <button id="search-return-id" type="button">Download return</button>
+                        </div>
+
+                        <div id="upload-alert-placeholder-search" style="margin-top: 15px;"></div>
+                        <div id="tax-summary-container">
+
+                            <!-- Thêm header summary mới ở đây -->
+                            <div class="return-header-section" id="return-header-section" style="display: none;">
+                                <h2>Tax Return Details</h2>
+                                <div class="header-box">
+                                    <h3>Header Information</h3>
+                                    <div class="header-content">
+                                        <div><strong>Tax Year:</strong> <span id="tax-year"></span></div>
+                                        <div><strong>Return Type:</strong> <span id="return-type"></span></div>
+                                        <div><strong>Version:</strong> <span id="version"></span></div>
+                                        <div><strong>Client ID:</strong> <span id="client-id"></span></div>
+                                        <div><strong>Return Group:</strong> <span id="return-group"></span></div>
+                                        <div><strong>Office Business Unit:</strong> <span
+                                                id="office-business-unit"></span></div>
+                                    </div>
+                                    <button id="btn-detail-json" style="margin-top: 10px;">View Tax Data</button>
+
+                                </div>
+                            </div>
+
+                            <!-- <button id="btn-show-json" type="button">Show JSON</button> -->
+                            <div class="detail-json-container" id="json-overlay" style="display: none;">
+                                <div class="detail-json-modal">
+                                    <h2>Tax Data</h2>
+                                    <button class="close-btn" id="close-overlay">X</button>
+                                    <div id="result-search-return-id">
+                                        <div id="result-overview" class="result-overview"></div>
+                                        <div id="result-buttons">
+                                            <button id="btn-download-json" type="button">Download JSON</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checklist-section">
+                                <h2>PBC List</h2>
+                                <div class="checklist-container">
+                                    <div class="status-box">
+                                        <label id="label-progress"><Strong>Progress: </Strong></label>
+                                        <label id="label-progress"><Strong>Status: </Strong></label>
+                                        <label id="label-progress"><Strong>Last Update: </Strong></label>
+                                        <label id="label-progress"><Strong>CCH Push Status: </Strong></label>
+                                    </div>
+
+                                    <div class="pbclist-button-box-header">
+                                        <button id="btn-send-client">Email PBC link to client</button>
+                                        <button id="btn-impersonate">Impersonate</button>
+                                    </div>
+
+                                    <div class="table-container">
+                                        <table class="document-table">
+                                            <thead>
+                                                <tr>
+                                                    <th><input type="checkbox" id="select-all" /> Import to CCH Tax</th>
+                                                    <th>Document Name</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="document-table-body"></tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="pbclist-button-box">
+                                        <div>
+
+                                            <button id="btn-send-to-cch">Import to CCH Tax</button>
+                                        </div>
+                                        <div>
+                                            <button id="btn-generate-pbc">Regenerate New PBC List</button>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="loading-overlay" class="loading-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+
+                <!-- view detail of JSON -->
+                <!-- <div id="result-search-return-id" style="display: none;">
+                    <div id="result-buttons">
+                        <button id="btn-view-json" type="button">View Full Detail</button>
+                        <button id="btn-download-json" type="button">Download JSON</button>
+                    </div>
+                    <div id="result-overview"></div>
+                </div> -->
+
+                <!-- <div class="download--container">
+                    <h2> 3. Summary Tax Organizer </h2>
+                    <div class="download-section">
+                        <button id="test-btn" type="button">Test</button>
+                    </div>
+                </div> -->
+
+                <!-- <div class="download--container">
+                    <h2> 4. Send to User </h2>
+                    <div class="download-section">
+                        <div class="client-questionnaire">
+                            <h2>Client Questionnaire</h2>
+                            <p>This questionnaire will guide you through all the info and documents we need from you.</p>
+                            <div class="step-info">1</div>
+                            <ul class="checklist">
+                                <li class="checked"><input type="checkbox" checked > W-2 (Alphabet, Inc.)</li>
+                                <li class="checked"><input type="checkbox" checked> 1099-INT (Bank of America)</li>
+                                <li><input type="checkbox" checked disabled> 1099-INT (Wells Fargo)</li>
+                                <li><input type="checkbox" disabled> 1099-DIV (Robinhood)</li>
+                                <li><input type="checkbox" disabled> Social security (John)</li>
+                                <li><input type="checkbox" disabled> Social security (Lisa)</li>
+                            </ul>
+                            <div class="continue-btn">
+                                Continue →
+                            </div>
+                            <div class="progress-bar">
+                                <div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+
+            <!--==========================================================-->
+            <!-- Import Data Tab -->
+            <div class="tab-content" id="import">
+
+                <div class="upload--container">
+                    <h2 style="margin-bottom: 10px;">Step 1: Import 1040 Tax Prep Template file </h2>
+                    <div class="import-section">
+                        <p class="section-desc">Click here to download the current 1040 Tax Prep template </p>
+                        <p class="section-desc">Make sure the correct Tax Return ID is in Cell A2 and RPA account has
+                            access to it </p>
+                        <input type="file" id="excelFile">
+                        <button id="upload-btn" type="button">Upload</button>
+
+                        <div id="upload-alert-placeholder-uploadfile" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+
+                <!-- style="display: none;" -->
+                <div class="processing--container hidden" id="processing--container">
+                    <h2> Step 2: Wait for processing: </h2>
+                    <div class="import-section" id="import--process">
+                        <p class="section-desc">Track the step-by-step progress of the import task.</p>
+                        <div id="step-tabs" class="step-tabs">
+                            <div class="step" data-step="1">1. Upload 1040 Template </div>
+                            <div class="arrow">➡️</div>
+                            <div class="step" data-step="2">2. Analyze Input File</div>
+                            <div class="arrow">➡️</div>
+                            <div class="step" data-step="3">3. Download</div>
+                            <div class="arrow">➡️</div>
+                            <div class="step" data-step="4">4. Validate</div>
+                            <div class="arrow">➡️</div>
+                            <div class="step" data-step="5">5. Upload to CCH</div>
+                            <div class="arrow">➡️</div>
+                            <div class="step" data-step="6">6. Complete</div>
+                        </div>
+                        <div id="upload-alert-placeholder-processing2" style="margin-top: 15px;"></div>
+                        <p id="progress-step"></p>
+                    </div>
+                </div>
+
+                <div class="result--container hidden" id="result--container">
+                    <h2> Step 3: Check the result </h2>
+                    <div class="import-section" id="import--result"></div>
+                </div>
+
+                <div class="recent--imports-container">
+                    <h2> Recent 20 imports </h2>
+                    <div class="import-section" id="import--recent--file">
+                        <p class="section-desc">View your most recent import files and their statuses.</p>
+                        <h3>Recent Imports</h3>
+                        <div id="loading-files" class="loading-spinner" style="display: none;">Loading files...</div>
+                        <div id="message-import" style="display: none; color: green; margin-top: 10px;"></div>
+                        <table id="file-list" class="file-table" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Submitted file</th>
+                                    <th>Status</th>
+                                    <th>Summary Result</th>
+                                    <th>Log file</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- File data will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay để hiển thị JSON -->
+            <!-- <div id="jsonOverlay" style="display: none;">
+                <div id="jsonContent">
+                    <button id="closeJsonBtn">X</button>
+                    <pre id="jsonDataBox"></pre>
+                </div>
+            </div> -->
+
+        </div>
+
+
+    </div>
+
+    <script>
+        document.getElementById("btn-impersonate").addEventListener("click", function () {
+            window.location.href = "../templete/basic_info.html";
+        });
+        // Tab Switching
+        document.querySelectorAll(".tab-link").forEach(tab => {
+            tab.addEventListener("click", function () {
+                document.querySelectorAll(".tab-link").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+                this.classList.add("active");
+                document.getElementById(this.dataset.tab).classList.add("active");
+            });
+        });
+
+
+
+    </script>
+    <script type="module" src="../js/download.js"></script>
+    <script type="module" src="../js/import.js"></script>
+</body>
+
+</html>
