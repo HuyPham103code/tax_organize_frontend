@@ -45,149 +45,6 @@ function stopSearchingEffect(button) {
 
 //===================================================================
 
-
-// function renderOverview(data) {
-//     const container = document.getElementById("result-search-return-id");
-//     const overviewBox = document.getElementById("result-overview");
-//     const btnView = document.getElementById("btn-view-json");
-//     // const btnDownload = document.getElementById("btn-download-json");
-
-//     container.style.display = "block";
-
-//     // ✅ Clear nội dung cũ
-//     overviewBox.innerHTML = "";
-
-//     btnView.onclick = () => {
-//         displayJsonOverlay(data)
-//     }
-
-//     // btnDownload.onclick = () => {
-//     //     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-//     //     const url = URL.createObjectURL(blob);
-
-//     //     const a = document.createElement("a");
-//     //     a.href = url;
-//     //     a.download = "tax_data.json";
-//     //     a.click();
-
-//     //     URL.revokeObjectURL(url);
-//     // };
-
-
-//     // Tạo table
-//     const table = document.createElement("table");
-//     table.border = "1";
-//     table.style.borderCollapse = "collapse";
-//     table.style.marginTop = "10px";
-
-//     // Tạo header
-//     const headerRow = document.createElement("tr");
-//     const header1 = document.createElement("th");
-//     header1.textContent = "Worksheet Name";
-//     const header2 = document.createElement("th");
-//     header2.textContent = "Entities Count";
-//     headerRow.appendChild(header1);
-//     headerRow.appendChild(header2);
-//     table.appendChild(headerRow);
-
-//     // Duyệt qua từng worksheet trong JSON
-//     for (const [worksheetName, worksheetData] of Object.entries(data)) {
-//         const row = document.createElement("tr");
-
-//         const nameCell = document.createElement("td");
-//         nameCell.textContent = worksheetName;
-//         nameCell.style.padding = "4px 8px";
-
-//         const countCell = document.createElement("td");
-//         countCell.textContent = worksheetData.entities_count;
-//         countCell.style.textAlign = "center";
-
-//         row.appendChild(nameCell);
-//         row.appendChild(countCell);
-//         table.appendChild(row);
-//     }
-
-//     overviewBox.appendChild(table);
-// }
-
-// //  Display json
-// function displayJsonOverlay(data) {
-//     const overlay = document.getElementById("jsonOverlay");
-//     const jsonBox = document.getElementById("jsonDataBox");
-//     const closeBtn = document.getElementById("closeJsonBtn");
-
-//     // Chuyển JSON thành HTML dạng tree với khả năng expand/collapse
-//     jsonBox.innerHTML = generateJsonTree(data);
-
-//     // Hiển thị popup
-//     overlay.style.display = "flex";
-
-//     // Nút đóng popup
-//     closeBtn.onclick = () => {
-//         overlay.style.display = "none";
-//         jsonBox.innerHTML = "";
-//     };
-// }
-
-// // 🟢 Chuyển JSON thành HTML tree có thể expand/collapse
-// function generateJsonTree(json, isRoot = true) {
-//     if (typeof json !== "object" || json === null) {
-//         return `<span class="json-value">${JSON.stringify(json)}</span>`;
-//     }
-
-//     const isArray = Array.isArray(json);
-//     let html = `<div class="json-container">`;
-
-//     if (!isRoot) {
-//         html += `<span class="json-toggle" onclick="toggleJsonTree(this)">[+] </span>`;
-//         html += `<div class="json-content json-collapsed">`;
-//     }
-
-//     html += isArray ? "[" : "{";
-//     html += `<ul class="json-list">`;
-
-//     for (const key in json) {
-//         const value = json[key];
-//         const isObject = typeof value === "object" && value !== null;
-//         const keyLabel = isArray
-//             ? ""
-//             : `<span class="json-key">"${key}"</span>: `;
-
-//         html += `<li>${keyLabel}`;
-
-//         if (isObject) {
-//             html += generateJsonTree(value, false);
-//         } else {
-//             html += `<span class="json-value">${JSON.stringify(value)}</span>`;
-//         }
-
-//         html += `,</li>`;
-//     }
-
-//     html += `</ul>${isArray ? "]" : "}"}`;
-
-//     if (!isRoot) {
-//         html += `</div>`;
-//     }
-
-//     html += `</div>`;
-//     return html;
-// }
-
-// // 🟢 Xử lý sự kiện click để thu gọn/mở rộng JSON tree
-// function toggleJsonTree(element) {
-//     const content = element.nextElementSibling;
-//     if (content) {
-//         const isCollapsed = content.classList.contains("json-collapsed");
-//         content.classList.toggle("json-collapsed", !isCollapsed);
-//         element.textContent = isCollapsed ? "[-] " : "[+] ";
-//     }
-// }
-
-
-
-// =========test============
-
 // ===test===
 
 function measureTextWidth(text, font = '16px Arial') {
@@ -809,10 +666,48 @@ function renderChecklist(jsonData, importHistory) {
 
     // === Render OCR data ===
     //===fix
+    // const tableBody = document.getElementById("document-table-body");
+    // tableBody.innerHTML = '';
+    // var key = '0'
+    // var status = '2'
+    // for (const worksheet in jsonData) {
+    //     const entities = jsonData[worksheet]?.data || [];
+    //     const displayFields = displayFieldMapping[worksheet] || [];
+
+    //     entities.forEach(entity => {
+    //         const pk = entity["General primary key"] || entity["General"] || entity;
+    //         const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
+    //         const fullKey = worksheet + " - " + displayText;
+    //         // So sánh với importHistory.link
+    //         let isChecked = false;
+    //         let tableRow = null
+    //         importHistory.forEach(batch => {
+    //             batch.imported_json_data?.forEach(doc => {
+    //                 const hasValidYear = doc.data.every(entity => entity.tax_year == TAX_YEAR);
+    //                 if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear) {
+    //                     isChecked = true;
+    //                     key = batch.id;
+    //                     status = (doc.status)
+    //                 }
+    //             });
+    //         });
+    //         if (isChecked) {
+    //             tableRow = createTableRow(worksheet, displayText, key, isChecked, '', status);
+    //             checkedRows.push(tableRow);
+    //         } else {
+    //             tableRow = createTableRow(worksheet, displayText, key, isChecked, '');
+    //             uncheckedRows.push(tableRow);
+    //         }
+    //         // tableBody.appendChild(tableRow);
+    //     });
+    // }
+
     const tableBody = document.getElementById("document-table-body");
     tableBody.innerHTML = '';
-    var key = '0'
-    var status = '2'
+
+    let key = "0";
+    let status = "2";
+
     for (const worksheet in jsonData) {
         const entities = jsonData[worksheet]?.data || [];
         const displayFields = displayFieldMapping[worksheet] || [];
@@ -821,50 +716,86 @@ function renderChecklist(jsonData, importHistory) {
             const pk = entity["General primary key"] || entity["General"] || entity;
             const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
             const fullKey = worksheet + " - " + displayText;
-            // So sánh với importHistory.link
+
             let isChecked = false;
-            let tableRow = null
-            importHistory.forEach(batch => {
-                batch.imported_json_data?.forEach(doc => {
-                    const hasValidYear = doc.data.every(entity => entity.tax_year == TAX_YEAR);
-                    if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear) {
-                        isChecked = true;
-                        key = batch.id;
-                        status = (doc.status)
-                    }
-                });
+            let tableRow = null;
+            let cch_status = false
+            let time_stamp = ''
+            let cch_import_status = false
+
+            // ✅ So sánh trực tiếp với từng entity trong importHistory
+            importHistory.forEach(doc => {
+                const hasValidYear = Array.isArray(doc.data)
+                    && doc.data.every(item => item.tax_year == TAX_YEAR);
+                // console.log(hasValidYear)
+                // console.log(doc.link)
+
+                if (
+                    (doc.form_type === worksheet &&
+                        doc.link === fullKey)
+                    || doc.data == ''
+                ) {
+                    isChecked = true;
+                    key = doc.id || "0";  // nếu không có id, gán tạm "0"
+                    status = doc.status || "2";
+                    cch_status = doc.is_imported_to_cch
+                    time_stamp = doc.imported_to_cch_at
+                    cch_import_status = doc.cch_import_status
+                }
             });
+
             if (isChecked) {
-                tableRow = createTableRow(worksheet, displayText, key, isChecked, '', status);
+                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status,  true, '', status);
                 checkedRows.push(tableRow);
             } else {
-                tableRow = createTableRow(worksheet, displayText, key, isChecked, '');
+                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status, false, '');
                 uncheckedRows.push(tableRow);
             }
-            // tableBody.appendChild(tableRow);
         });
     }
 
-    importHistory.forEach(batch => {
-        batch.imported_json_data?.forEach(doc => {
-            const { form_type, link, status, data } = doc;
-            const matchField = linkFieldMapping[form_type];
+    importHistory.forEach((entity, index) => {
+        const { form_type, link, status, data } = entity;
+        const matchField = linkFieldMapping[form_type];
+        let cch_status = false
+        let time_stamp = ''
+        let cch_import_status = false
 
+        if (Object.keys(entity.data || {}).length > 0) {
+            return
+        }
+        // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
+        if (!Array.isArray(data) || !matchField) return;
 
-            if (!link || !Array.isArray(data) || !matchField) return;
+        // key = return_id hoặc id của entity (tuỳ chọn)
+        const key = `entity_${index}`;
 
-            // const key = form_type + "|" + link.key?.toLowerCase();
-            key = batch.id;
+        // Trường hợp chưa có link => hiển thị là new item
+        if (link === "New Item" || !link) {
+            const entityData = data[0] || {};
+            const displayText = (entityData[matchField] || "(missing)").toString();
 
-            if (link == "New Item") {
-                const entity = data[0] || {};
-                const displayText = (entity[matchField] || "(missing)").toString();
-                const tableRow = createTableRow(form_type, displayText, key, true, " (New item)", status);
-                tableBody.appendChild(tableRow);
-                checkedRows.push(tableRow);
-            }
-        });
+            cch_status = entity.is_imported_to_cch
+            time_stamp = doc.imported_to_cch_at
+            cch_import_status = doc.cch_import_status
+
+            const tableRow = createTableRow(
+                form_type,
+                displayText,
+                key,
+                cch_status,
+                time_stamp,
+                cch_import_status,
+                true,
+                " (New item)",
+                status
+            );
+
+            tableBody.appendChild(tableRow);
+            checkedRows.push(tableRow);
+        }
     });
+
 
     [...checkedRows, ...uncheckedRows].forEach(row => tableBody.appendChild(row));
 
@@ -1090,14 +1021,23 @@ tableBody.addEventListener("change", function (e) {
 
 
 
-function createTableRow(formType, displayText, key, isChecked = false, newFound = '', status = '3') {
+function createTableRow(formType, displayText, key, cch_status, timeStamp, cch_import_status, isChecked = false, newFound = '', status = '3') {
     const row = document.createElement("tr");
     row.setAttribute("data-key", key);
 
     if (newFound != '') {
         console.log(displayText)
     }
-    console.log(status)
+    let show_cch_status = `${cch_status}`
+    // if (cch_import_status == "success") {console.log("do123")}
+    if (cch_status) {
+        const date = new Date(timeStamp);
+
+        // Format mm-dd-yyyy hh:mm:ss
+        const formatted = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()} ` +
+            `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        show_cch_status = `imported - ${cch_import_status} - ${formatted}`
+    }
     let statusText = "Pending to Upload";  // default
     if (status === '1') statusText = "✅ CCH Import - Success";
     else if (status === '2') statusText = "✅ Uploaded";
@@ -1108,6 +1048,7 @@ function createTableRow(formType, displayText, key, isChecked = false, newFound 
     row.innerHTML = `
         <td ><input type="checkbox" ${isChecked ? "checked" : ""} ${status != '2' ? "disabled" : ""}></td>
         <td class="doc-name">${formType} (${displayText})${newFound}</td>
+        <td class="import-cch-status">${show_cch_status}</td>
         <td style="text-align: center;"><span class="status-tag status-${status}">${statusText}</span></td>
         <td class="center-cell">
             <button class="action-btn delete-btn" title="Remove">🗑</button>
@@ -1123,6 +1064,7 @@ document.addEventListener("click", function (e) {
         const importId = row.getAttribute("data-key");
         if (importId == '0') { return }
         if (confirm(`Are you sure you want to delete this import - ${importId}? `)) {
+            // return
             fetch(`${API_BASE_URL}/api/cch-import/delete-import/${importId}/`, {
                 method: "DELETE",
                 headers: {
@@ -1266,28 +1208,9 @@ function export_tax_data() {
 }
 
 function updateImportedStatus() {
-    var imports = localStorage.getItem('importHistory');
-    var importHistory = JSON.parse(imports);
-    const checkedRows = document.querySelectorAll("#document-table-body tr");
 
-    checkedRows.forEach(row => {
-        const checkbox = row.querySelector("input[type='checkbox']");
-        const key = row.getAttribute("data-key");
+    export_tax_data()
 
-        if (checkbox && checkbox.checked && !checkbox.disabled) {
-            const matchedItem = importHistory.find(item => String(item.id) === key);
-            if (matchedItem) {
-                // ✅ Cập nhật tất cả status trong imported_json_data thành "1"
-                matchedItem.imported_json_data.forEach(doc => {
-                    doc.status = "1";
-                });
-            }
-        }
-    });
-    var jsonData = localStorage.getItem('jsonData');
-    renderChecklist(JSON.parse(jsonData), importHistory)
-    // ✅ Nếu muốn lưu lại importHistory vào localStorage sau khi cập nhật
-    localStorage.setItem("importHistory", JSON.stringify(importHistory));
 }
 
 //===============================send to cch======================================================
@@ -1384,7 +1307,7 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
             const link = document.createElement("a");
             link.href = window.URL.createObjectURL(blob);
             link.download = filename;
-            
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

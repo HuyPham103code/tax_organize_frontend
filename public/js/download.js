@@ -84,7 +84,7 @@ function search_return_id() {
         .then(response => {
             if (response.success) {
                 console.log("success");
-
+                console.log(response)
                 const jsonData = response.data; // <-- dữ liệu chính
                 const importHistory = response.imported_history || []; // <-- lấy import history
 
@@ -127,7 +127,6 @@ function search_return_id() {
             document.getElementById("search-container").style.display = 'None';
             document.body.style.cursor = 'default';
         });
-
 }
 
 
@@ -911,7 +910,7 @@ function renderReturnsTable(data) {
     const tableBody = document.getElementById('list-returns-table-body');
 
     returnList.style.display = 'block';
-    tableBody.innerHTML = ''; // clear existing rows
+    tableBody.innerHTML = ''; 
 
     data.forEach((item) => {
         const row = document.createElement('tr');
@@ -919,14 +918,14 @@ function renderReturnsTable(data) {
         const lastUpdate = item.LatestImportTime
             ? new Date(item.LatestImportTime).toLocaleString()
             : 'Not Generated';
-        const pbcProgress = item.MatchedStatus2Count > 0
-            ? `${item.MatchedStatus2Count}/${item.TotalEntities}`
+        const pbcProgress = item.ImportCount > 0
+            ? `${item.ImportCount}/${item.TotalEntities}`
             : 'Not Generated';
 
         // const pbcStatus = item.MatchedStatus2Count > 0 ? 'Client - Completed' : 'Not Generated';
         let pbcStatus = 'Not Generated';
-        if (item.MatchedStatus2Count > 0) {
-            if (item.MatchedStatus2Count === item.TotalEntities) {
+        if (item.ImportCount > 0) {
+            if (item.ImportCount === item.TotalEntities) {
                 pbcStatus = 'Client - Completed';
             } else {
                 pbcStatus = 'Client - In Progress';

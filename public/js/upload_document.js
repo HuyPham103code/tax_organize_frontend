@@ -62,14 +62,13 @@ window.addEventListener('DOMContentLoaded', () => {
     generateEntityListFromOCR(checklistData)
     console.log(globalEntityOptions)
 
-    if (importedHistory != '') {
-        importedHistory.forEach(history => {
+    if (importedHistory && importedHistory.length) {
+        importedHistory.forEach(entity => {
             const result = {
-                recognized_documents: history.imported_json_data || [],
-                file_url: history.pdf_path
+                recognized_documents: [entity], // mỗi entity là 1 "doc"
+                file_url: entity.pdf_path || ""
             };
             appendRecognizedDocsToTable(result);
-            // renderUploadedDocuments(importedHistory)
         });
     }
 
@@ -277,8 +276,9 @@ function renderChecklist2(data, importedHistory) {
     }
 }
 
+
 function renderChecklist(jsonData, importHistory) {
-    console.log("start render on the right")
+    console.log("start render on the right");
     const ulThisYear = document.querySelector(".result_checklist1");
     const ulNewFound = document.querySelector(".result_checklist-new-found1");
     ulThisYear.innerHTML = '';
@@ -300,13 +300,16 @@ function renderChecklist(jsonData, importHistory) {
         "W-2": "Employer_Name",
         "1099-DIV": "Payer_Name"
     };
-    var year = ''
+
+    let year = '';
     const returnHeader = jsonData.ReturnHeader || {};
-        if (returnHeader) {            
-            year = returnHeader.TaxYear
-        }
-    
-    // 1. Duyệt JSON OCR để render
+    if (returnHeader) {
+        year = returnHeader.TaxYear;
+    }
+    console.log("check123")
+    console.log(year)
+
+    // === 1. Duyệt JSON OCR để render checklist chính ===
     for (const worksheet in jsonData) {
         const entities = jsonData[worksheet]?.data || [];
         const displayFields = displayFieldMapping[worksheet] || [];
@@ -314,54 +317,60 @@ function renderChecklist(jsonData, importHistory) {
         entities.forEach(entity => {
             const pk = entity["General primary key"] || entity["General"] || entity;
             const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
-            const li = document.createElement("li");
             const fullKey = worksheet + " - " + displayText;
-                        
-            // So sánh với importHistory.link
+
             let isChecked = false;
-            importHistory.forEach(batch => {
-                batch.imported_json_data?.forEach(doc => {
-                    const hasValidYear = doc.data.every(entity => entity.tax_year == year);
-                    
-                    if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear  ) {
-                        isChecked = true;
-                    }
-                });
+
+            // ✅ So sánh trực tiếp với từng entity trong importHistory (flat)
+            importHistory.forEach(doc => {
+                const isSameType = doc.form_type === worksheet;
+                const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
+                const isThisYear = Array.isArray(doc.data)
+                    && doc.data.every(d => String(d.tax_year) === String(year));
+                
+                if (isSameType && isSameLink && isThisYear) {
+                    isChecked = true;
+                }
             });
 
+            const li = document.createElement("li");
             li.innerHTML = `<input type="checkbox" ${isChecked ? "checked" : ""}> ${worksheet} (${displayText})`;
             li.setAttribute("data-key", fullKey);
             ulThisYear.appendChild(li);
         });
     }
 
-    // 2. Duyệt ngược lại importHistory → tìm các item `link` mà chưa xuất hiện trong danh sách
-    importHistory.forEach(batch => {
-        batch.imported_json_data?.forEach(doc => {
-            const { form_type, link, status, data } = doc;
-            const matchField = linkFieldMapping[form_type];
+    // === 2. Duyệt importHistory để tìm các entity "mới được OCR", chưa có trong JSON ===
+    importHistory.forEach(entity => {
+        const { form_type, link, data, status } = entity;
+        const matchField = linkFieldMapping[form_type];
 
-            if (!link || !Array.isArray(data) || !matchField) return;
+        const isThisYear = Array.isArray(data) && data.every(d => String(d.tax_year) === String(year));
 
-            const key = form_type + "|" + link.key?.toLowerCase();
-            //  !document.querySelector(`li[data-key="${key}"]`)
-            if (link == "New Item") {
-                console.log("new")
-                const entity = data[0] || {};
-                const displayText = (entity[matchField] || "(missing)").toString();
-                const li = document.createElement("li");
-                li.innerHTML = `<input type="checkbox" checked> ${form_type} (${displayText})`;
-                li.classList.add("new-found");
-                li.setAttribute("data-key", key);
-                ulNewFound.appendChild(li);
-            }
-        });
+        if (!isThisYear || !Array.isArray(data) || !matchField) return;
+
+        const isNew = !link || link === "New Item";
+        const entityData = data[0] || {};
+        const displayText = (entityData[matchField] || "(missing)").toString();
+        const fullKey = form_type + " - " + displayText;
+
+        // ✅ Nếu là "New Item" và chưa có ở danh sách chính thì thêm vào New Found
+        const alreadyRendered = !!ulThisYear.querySelector(`li[data-key="${fullKey}"]`);
+        if (isNew && !alreadyRendered) {
+            const li = document.createElement("li");
+            li.innerHTML = `<input type="checkbox" checked> ${form_type} (${displayText})`;
+            li.classList.add("new-found");
+            li.setAttribute("data-key", fullKey);
+            ulNewFound.appendChild(li);
+        }
     });
 
     const labelNewFound = document.querySelector(".new-found-label1");
     labelNewFound.style.display = ulNewFound.children.length > 0 ? "block" : "none";
-    console.log("end render 123")
+
+    console.log("end render 123");
 }
+
 
 
 
@@ -727,39 +736,26 @@ async function uploadAndAnalyzeFile() {
         console.log(result)
         console.log(oldHistory)
         // 3. Lấy bản ghi hiện tại đang được hiển thị (thường là phần tử đầu tiên)
+
         function appendImportToHistory(importedHistory, ocrResponse) {
             const recognizedDocuments = ocrResponse.recognized_documents || [];
-            console.log("check11111")
-            console.log(ocrResponse.recognized_documents)
             if (recognizedDocuments.length === 0) return importedHistory;
-            console.log(ocrResponse.import_id)
-            const newImportItem = {
-                id: ocrResponse.import_id,
-                imported_at: new Date().toISOString(), // thời gian hiện tại
-                imported_json_url: ocrResponse.json_path || "", // đường dẫn file PDF
-                imported_json_data: recognizedDocuments.map(doc => ({
-                    page_number: doc.page_number,
-                    form_type: doc.form_type,
-                    data: doc.data,
-                    status: "2",
-                    link: doc.link
-                    // valid: doc.data.every(entity => entity.tax_year == TAX_YEAR) ? "valid" : "invalid" // ✅ OCR mới → mặc định là "this year"
-                })),
-                pbc_status: "Imported",
-                pbc_progress: "Pending",
+
+            const newEntities = recognizedDocuments.map(doc => ({
+                form_type: doc.form_type,
+                page_number: doc.page_number,
+                data: doc.data,
+                status: doc.status || "2",
+                link: doc.link || "",
+                imported_at: new Date().toISOString(),
+                is_imported_to_cch: false,
+                cch_import_status: "pending",
+                imported_to_cch_at: null,
                 pdf_path: ocrResponse.file_url || "",
-            };
-            console.log("newitem")
-            console.log(newImportItem)
+                id: doc.id || null, // 👈 Nếu bạn muốn chờ backend trả về ID thì để null
+            }));
 
-            // Nếu history chưa có gì, tạo mảng mới
-            if (!Array.isArray(importedHistory)) {
-                importedHistory = [];
-            }
-
-            importedHistory.unshift(newImportItem); // thêm vào đầu mảng
-
-            return importedHistory;
+            return [...newEntities, ...importedHistory]; // prepend vào đầu
         }
 
         //  need check
@@ -1467,30 +1463,25 @@ async function handle_confirm_btn(importHistory) {
     rows.forEach(row => {
         const formType = row.children[2]?.textContent?.trim();
         const entityKey = row.dataset.entityKey?.toLowerCase();
-        const isValid = row.children[4]?.textContent?.trim()
+        const isValid = row.children[4]?.textContent?.trim();
         const select = row.querySelector("select.link-select");
         const selectedLabel = select?.value;
-        
 
-        if (!formType || !entityKey || !selectedLabel || isValid != "Valid") return;
-        console.log("do")
-        // So sánh và gán link cho entity trong importHistory
-        data.forEach(batch => {
-            batch.imported_json_data?.forEach(doc => {
-                if (doc.form_type !== formType) return;
+        if (!formType || !entityKey || !selectedLabel || isValid !== "Valid") return;
 
-                doc.data?.forEach(entity => {
-                    const field = displayFieldMapping[formType];
-                    const entityName = entity[field]?.toLowerCase();
-                    // const label = `${formType} - ${entity[field] || "(missing)"}`.toLowerCase();
-                    
-                    if (entityName == entityKey.toLowerCase()) {
-                        doc.link = selectedLabel
-                    }
-                });
-            });
+        const matchField = displayFieldMapping[formType];
+
+        // ✅ Lặp trực tiếp qua các entity (importHistory là flat list)
+        data.forEach(entity => {
+            if (entity.form_type !== formType || !Array.isArray(entity.data)) return;
+
+            const fieldValue = entity.data[0]?.[matchField]?.toLowerCase();
+            if (fieldValue === entityKey) {
+                entity.link = selectedLabel;
+            }
         });
     });
+
     console.log(data)
     console.log(RETURN_ID)
     localStorage.setItem('importHistory', JSON.stringify(data));
@@ -1516,14 +1507,15 @@ async function handle_confirm_btn(importHistory) {
 //=====================================extract filename from url========================
 function extractOriginalFilename(url) {
 
-  const encodedFilename = url.split('/').pop(); // file1%202024_05-13-2025%2018-43-20.pdf
-  const decoded = decodeURIComponent(encodedFilename); // file1 2024_05-13-2025 18-43-20.pdf
-  const original = decoded.replace(/_\d{2}-\d{2}-\d{4} \d{2}-\d{2}-\d{2}\.pdf$/, ".pdf");
-  return original;
+    const encodedFilename = url.split('/').pop(); // file1%202024_05-13-2025%2018-43-20.pdf
+    const decoded = decodeURIComponent(encodedFilename); // file1 2024_05-13-2025 18-43-20.pdf
+    const original = decoded.replace(/_\d{2}-\d{2}-\d{4} \d{2}-\d{2}-\d{2}\.pdf$/, ".pdf");
+    return original;
 
 }
 //=================================render table after import============================
 const seen = new Set(); // ✅ Dùng để tránh render trùng
+
 function appendRecognizedDocsToTable(result) {
     const tableBody = document.querySelector(".validation-table tbody");
     if (!tableBody) return;
@@ -1532,27 +1524,33 @@ function appendRecognizedDocsToTable(result) {
         "W-2": ["Employer_Name", "TS"],
         "1099-DIV": ["Payer_Name"]
     };
-    var file_name = ''
-    if (result.file_url)
-        file_name = extractOriginalFilename(result.file_url)
-    
+
+    const file_name = result.file_url ? extractOriginalFilename(result.file_url) : "";
+
     result.recognized_documents.forEach(doc => {
         const page = doc.page_number;
         const formType = doc.form_type;
+        const linkFromDoc = doc.link || "";
         const entities = doc.data || [];
+        
+        if (typeof doc.data === 'object' && !Array.isArray(doc.data) && Object.keys(doc.data).length === 0) {
+            return;
+        }
+
         entities.forEach(entity => {
             const displayFields = displayFieldMapping[formType] || [];
             const key = formType + "|" + displayFields.map(f => entity[f] || "").join("|").toLowerCase();
-            const labelKey = `${formType} - ${displayFields.map(f => entity[f] || "(missing)").join(" - ")}`.toLowerCase();
-            console.log(entity.tax_year)
+
             if (seen.has(key)) return;
             seen.add(key);
-
+            // console.log(entities.data)
             const isValid = entity.tax_year == TAX_YEAR;
             const displayText = displayFields.map(f => entity[f] || "(missing)").join(" - ");
+
             const tr = document.createElement("tr");
-            const entityKeyField = formType === "W-2" ? entity["Employer_Name"] :
-                formType === "1099-DIV" ? entity["Payer_Name"] : "";
+            const entityKeyField = formType === "W-2" ? entity["Employer_Name"]
+                : formType === "1099-DIV" ? entity["Payer_Name"]
+                    : "";
             tr.setAttribute("data-entity-key", (entityKeyField || "").toLowerCase());
 
             tr.innerHTML = `
@@ -1561,7 +1559,8 @@ function appendRecognizedDocsToTable(result) {
                 <td>${formType}</td>
                 <td>${displayText}</td>
                 <td class="${isValid ? 'valid' : 'invalid'}">
-                ${isValid ? 'Valid' : `Invalid Tax Year (${entity.tax_year || 'N/A'})`}</td>
+                    ${isValid ? 'Valid' : `Invalid Tax Year (${entity.tax_year || 'N/A'})`}
+                </td>
                 <td></td>
             `;
 
@@ -1570,26 +1569,21 @@ function appendRecognizedDocsToTable(result) {
 
             if (globalEntityOptions?.length) {
                 let matched = false;
-
-                // ✅ Chỉ lấy options cùng form type
-                const filteredOptions = globalEntityOptions.filter(opt => opt.formType == formType);
+                const filteredOptions = globalEntityOptions.filter(opt => opt.formType === formType);
 
                 filteredOptions.forEach(opt => {
-                    const optionKey = opt.key?.toLowerCase(); // 🔁 key trong globalEntityOptions
                     const option = document.createElement("option");
                     option.textContent = opt.label;
-                    console.log(option.textContent)
-                    
-                    if (option.textContent.toLocaleLowerCase() == (doc.link.toLocaleLowerCase())) {
+
+                    const full_key = `${formType} - ${displayText}`.toLowerCase();
+                    const optionLabel = opt.label.toLowerCase();
+
+                    if (
+                        optionLabel === linkFromDoc.toLowerCase() ||
+                        (linkFromDoc === "" && optionLabel === full_key)
+                    ) {
                         option.selected = true;
                         matched = true;
-                    }
-                    if (doc.link == '') {
-                        var full_key = `${formType} - ${displayText}`
-                        if (option.textContent.toLocaleLowerCase() === (full_key.toLocaleLowerCase())) {
-                            option.selected = true;
-                            matched = true;
-                        }
                     }
 
                     select.appendChild(option);
@@ -1598,12 +1592,12 @@ function appendRecognizedDocsToTable(result) {
                 select.appendChild(new Option("──────────", "", false, false)).disabled = true;
                 const newItem = new Option("New Item", "New Item");
                 const invalidItem = new Option("Cancel", "Cancel");
+
                 select.appendChild(newItem);
-                //  if new item => checked
+                select.appendChild(invalidItem);
+
                 if (!matched) newItem.selected = true;
                 if (!isValid) invalidItem.selected = true;
-                select.appendChild(invalidItem);
-                
             }
 
             tr.querySelector("td:last-child").appendChild(select);
@@ -1612,10 +1606,12 @@ function appendRecognizedDocsToTable(result) {
     });
 }
 
-//========================render document========================
+
 function renderUploadedDocuments(importHistory) {
     const container = document.querySelector(".uploaded-documents .document-group");
     container.innerHTML = ''; // Clear cũ
+    console.log("checked")
+    console.log(importHistory)
 
     const seenKeys = new Set(); // Để lọc trùng
     const displayFieldMappingImport = {

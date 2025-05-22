@@ -274,11 +274,88 @@ function save_attachments() {
 
 //========================================show new checklist=====================================
 import { toggleVisibility } from './utils/toggleHide.js'
+// function renderChecklist(jsonData, importHistory) {
+//     // return
+//     toggleVisibility("checklist", "show");
+//     const checklist = document.getElementById("checklist")
+//     checklist.innerHTML = ''
+//     const displayFieldMapping = {
+//         "W-2": ["Employer name", "TS"],
+//         "1099-R": ["Payer's name"],
+//         "1099-SSA": ["TSJ"],
+//         "1099-INT": ["Payer's name"],
+//         "1099-DIV": ["Payer's name"],
+//         "Consolidated 1099": ["Payer name"],
+//         "K-1 1041": ["TSJ", "Name of k-1 entity"],
+//         "K-1 1065": ["TSJ", "Partnership's name"],
+//         "K-1 1120S": ["TSJ", "Corporation's name"]
+//     };
+
+//     var key = '0'
+//     var status = '2'
+
+//     for (const worksheet in jsonData) {
+//         const entities = jsonData[worksheet]?.data || [];
+//         const displayFields = displayFieldMapping[worksheet] || [];
+
+//         entities.forEach(entity => {
+//             const pk = entity["General primary key"] || entity["General"] || entity;
+//             const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
+//             const fullKey = worksheet + " - " + displayText;
+//             // So sánh với importHistory.link
+//             let isChecked = false;
+//             const li = document.createElement("li");
+//             li.setAttribute("data-key", fullKey);
+//             importHistory.forEach(batch => {
+//                 batch.imported_json_data?.forEach(doc => {
+//                     const hasValidYear = doc.data.every(entity => entity.tax_year == TAX_YEAR);
+//                     // console.log("link: ", doc.link)
+//                     // console.log(fullKey)
+//                     if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear) {
+//                         isChecked = true;
+//                         key = batch.id;
+//                         status = (doc.status)
+//                     }
+//                 });
+//             });
+//             if (!isChecked) {
+//                 // li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
+//                 li.innerHTML = `
+//                     <label>
+//                         <input type="checkbox">
+//                         ${worksheet} (${displayText})
+//                     </label>
+//                     <div class="expand-panel">
+//                         <button class="btn-upload"><a href="../templete/document.html">Upload</a></button>
+//                         <button class="btn-secondary btn-na">Not Applicable</button>
+//                         <button class="btn-secondary btn-pe">Provided Elsewhere</button>
+//                     </div>
+//                 `
+//                 checklist.appendChild(li);
+//             } else {
+//                 console.log(123)
+//             }
+//         });
+//     }
+
+//     document.querySelectorAll("#checklist li").forEach((item) => {
+//         item.addEventListener("click", function (e) {
+//             // Tránh trigger khi click vào checkbox
+//             if (e.target.tagName.toLowerCase() === "input") return;
+
+//             this.classList.toggle("active");
+//         });
+//     });
+
+//     attachChecklistEvents()
+
+// }
+
 function renderChecklist(jsonData, importHistory) {
-    // return
     toggleVisibility("checklist", "show");
-    const checklist = document.getElementById("checklist")
-    checklist.innerHTML = ''
+    const checklist = document.getElementById("checklist");
+    checklist.innerHTML = "";
+
     const displayFieldMapping = {
         "W-2": ["Employer name", "TS"],
         "1099-R": ["Payer's name"],
@@ -291,9 +368,6 @@ function renderChecklist(jsonData, importHistory) {
         "K-1 1120S": ["TSJ", "Corporation's name"]
     };
 
-    var key = '0'
-    var status = '2'
-
     for (const worksheet in jsonData) {
         const entities = jsonData[worksheet]?.data || [];
         const displayFields = displayFieldMapping[worksheet] || [];
@@ -302,24 +376,35 @@ function renderChecklist(jsonData, importHistory) {
             const pk = entity["General primary key"] || entity["General"] || entity;
             const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
             const fullKey = worksheet + " - " + displayText;
-            // So sánh với importHistory.link
+
             let isChecked = false;
+            let matchedEntityId = null;
+            let matchedStatus = "2";
+
+            // ✅ So sánh với từng entity trong importHistory (flat)
+            importHistory.forEach(doc => {
+                const isSameType = doc.form_type === worksheet;
+                const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
+                const isValidYear = Array.isArray(doc.data)
+                    && doc.data.every(d => String(d.tax_year) === String(TAX_YEAR));
+
+                if (isSameType && isSameLink && isValidYear) {
+                    console.log("check")
+                    console.log(doc.link?.toLowerCase())
+                    console.log(fullKey.toLowerCase())
+
+                    isChecked = true;
+                    matchedEntityId = doc.id;
+                    matchedStatus = doc.status;
+                }
+            });
+
             const li = document.createElement("li");
             li.setAttribute("data-key", fullKey);
-            importHistory.forEach(batch => {
-                batch.imported_json_data?.forEach(doc => {
-                    const hasValidYear = doc.data.every(entity => entity.tax_year == TAX_YEAR);
-                    // console.log("link: ", doc.link)
-                    // console.log(fullKey)
-                    if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear) {
-                        isChecked = true;
-                        key = batch.id;
-                        status = (doc.status)
-                    }
-                });
-            });
+
             if (!isChecked) {
-                // li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
+                // ❌ Chưa được matched → render với checkbox và panel
+
                 li.innerHTML = `
                     <label>
                         <input type="checkbox">
@@ -330,26 +415,27 @@ function renderChecklist(jsonData, importHistory) {
                         <button class="btn-secondary btn-na">Not Applicable</button>
                         <button class="btn-secondary btn-pe">Provided Elsewhere</button>
                     </div>
-                `
+                `;
                 checklist.appendChild(li);
             } else {
+                // ✅ Đã matched (không cần hiện )
                 console.log(123)
             }
+            
         });
     }
 
+    // 🔁 Gán sự kiện toggle cho expand panel
     document.querySelectorAll("#checklist li").forEach((item) => {
         item.addEventListener("click", function (e) {
-            // Tránh trigger khi click vào checkbox
             if (e.target.tagName.toLowerCase() === "input") return;
-
             this.classList.toggle("active");
         });
     });
 
-    attachChecklistEvents()
-
+    attachChecklistEvents();
 }
+
 
 const statusMap = new Map();
 // function attachChecklistEvents() {
