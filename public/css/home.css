@@ -11,7 +11,8 @@ body {
     background: #f4f4f4;
     display: flex;
     flex-direction: column;
-    height: 120vh;
+    height: 130vh;
+    overflow-y: hidden;
 }
 
 /* Navbar */
@@ -103,14 +104,32 @@ body {
 
 /* Buttons & Inputs */
 button {
-    background: #4093f2;
+    /* background: #4093f2;
     color: white;
     border: none;
     padding: 10px 15px;
     font-size: 16px;
     cursor: pointer;
     border-radius: 5px;
-    transition: 0.3s;
+    transition: 0.3s; */
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.25;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    
+    background-color: #2563eb; /* blue-600 */
+    color: white;
 }
 
 button:hover {
@@ -522,8 +541,8 @@ th {
     border-radius: 8px;
     margin-bottom: 25px;
     background-color: #f9f9f9;
-    /* max-height: 90vh; */
-    /* overflow-y: scroll; */
+    max-height: 90vh;
+    overflow-y: scroll;
 }
 
 .list-returns {
@@ -815,4 +834,3 @@ th {
     /* xanh dương – đã cung cấp chỗ khác */
     font-weight: 600;
 }
-

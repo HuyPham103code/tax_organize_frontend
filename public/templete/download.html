@@ -316,7 +316,7 @@
         }
 
         .table-container {
-            max-height: 350px;
+            max-height: 395px;
             overflow-y: auto;
             border: 1px solid #ccc;
         }
@@ -442,21 +442,24 @@
         }
 
         /* 1. ✅ CCH Import - Success */
-        .status-1 {
+        .status-1,
+        .status-2,
+        .status-Success {
             background-color: #d1fae5;
             color: #059669;
             border: 1px solid #10b981;
         }
 
         /* 2. ✅ Uploaded */
-        .status-2 {
+        /* .status-2 {
             background-color: #ecfdf5;
             color: #059669;
             border: 1px solid #34d399;
-        }
+        } */
 
         /* 3. Pending to Upload */
-        .status-3 {
+        .status-3,
+        .status-Pending {
             background-color: #fef9c3;
             color: #ca8a04;
             border: 1px solid #facc15;
@@ -475,6 +478,51 @@
             background-color: #dbeafe;
             color: #2563eb;
             border: 1px solid #3b82f6;
+        }
+
+        .status-Failed {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #dc2626;
+        }
+
+        .center-row {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        /* first column */
+        .document-table thead th:first-child,
+        .document-table tbody td:first-child {
+            width: 320px !important;
+        }
+
+        /* second column */
+        .document-table thead th:nth-child(2),
+        .document-table tbody td:nth-child(2) {
+            width: 170px !important;
+            text-align: center !important;
+        }
+
+        /* third column */
+        .document-table thead th:nth-child(3),
+        .document-table tbody td:nth-child(3) {
+            width: 170px !important;
+            text-align: center;
+        }
+
+        /* 4th column */
+        .document-table thead th:nth-child(4),
+        .document-table tbody td:nth-child(4) {
+            width: 150px !important;
+            text-align: center !important;
+        }
+
+        /* 5th column */
+        .document-table thead th:nth-child(5),
+        .document-table tbody td:nth-child(5) {
+            width: 150px !important;
+            text-align: center !important;
         }
     </style>
 
@@ -568,10 +616,17 @@
                                         <table class="document-table">
                                             <thead>
                                                 <tr>
-                                                    <th><input type="checkbox" id="select-all" /> Import to CCH Tax</th>
                                                     <th>Document Name</th>
-                                                    <th>Import to CCH</th>
-                                                    <th>Status</th>
+                                                    <th>Upload Status</th>
+                                                    <th style="text-align: center;">
+                                                        <label
+                                                            style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                                            <input type="checkbox" id="select-all" />
+                                                            Import To CCH
+                                                        </label>
+                                                    </th>
+                                                    <th>Import Status</th>
+                                                    <th>Last Update</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -581,10 +636,10 @@
 
                                     <div class="pbclist-button-box">
                                         <div>
-
-                                            <button id="btn-send-to-cch">Import to CCH Tax</button>
+                                            
                                         </div>
                                         <div>
+                                            <button id="btn-send-to-cch">Import to CCH Tax</button>
                                             <button id="btn-generate-pbc">Regenerate New PBC List</button>
                                         </div>
 

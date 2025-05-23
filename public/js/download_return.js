@@ -664,44 +664,6 @@ function renderChecklist(jsonData, importHistory) {
     const checkedRows = [];
     const uncheckedRows = [];
 
-    // === Render OCR data ===
-    //===fix
-    // const tableBody = document.getElementById("document-table-body");
-    // tableBody.innerHTML = '';
-    // var key = '0'
-    // var status = '2'
-    // for (const worksheet in jsonData) {
-    //     const entities = jsonData[worksheet]?.data || [];
-    //     const displayFields = displayFieldMapping[worksheet] || [];
-
-    //     entities.forEach(entity => {
-    //         const pk = entity["General primary key"] || entity["General"] || entity;
-    //         const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
-    //         const fullKey = worksheet + " - " + displayText;
-    //         // So sánh với importHistory.link
-    //         let isChecked = false;
-    //         let tableRow = null
-    //         importHistory.forEach(batch => {
-    //             batch.imported_json_data?.forEach(doc => {
-    //                 const hasValidYear = doc.data.every(entity => entity.tax_year == TAX_YEAR);
-    //                 if (doc.form_type == worksheet && doc.link == fullKey && hasValidYear) {
-    //                     isChecked = true;
-    //                     key = batch.id;
-    //                     status = (doc.status)
-    //                 }
-    //             });
-    //         });
-    //         if (isChecked) {
-    //             tableRow = createTableRow(worksheet, displayText, key, isChecked, '', status);
-    //             checkedRows.push(tableRow);
-    //         } else {
-    //             tableRow = createTableRow(worksheet, displayText, key, isChecked, '');
-    //             uncheckedRows.push(tableRow);
-    //         }
-    //         // tableBody.appendChild(tableRow);
-    //     });
-    // }
-
     const tableBody = document.getElementById("document-table-body");
     tableBody.innerHTML = '';
 
@@ -1028,28 +990,29 @@ function createTableRow(formType, displayText, key, cch_status, timeStamp, cch_i
     if (newFound != '') {
         console.log(displayText)
     }
-    let show_cch_status = `${cch_status}`
-    // if (cch_import_status == "success") {console.log("do123")}
+    let show_cch_status = `Pending`
+    let formatted = ''
+    //  nếu đã import to cch
     if (cch_status) {
         const date = new Date(timeStamp);
 
         // Format mm-dd-yyyy hh:mm:ss
-        const formatted = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()} ` +
+        formatted = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()} ` +
             `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-        show_cch_status = `imported - ${cch_import_status} - ${formatted}`
+        show_cch_status = `${cch_import_status}`
     }
     let statusText = "Pending to Upload";  // default
     if (status === '1') statusText = "✅ CCH Import - Success";
     else if (status === '2') statusText = "✅ Uploaded";
     else if (status === '4') statusText = "Not Applicable"
     else if (status === '5') statusText = "Provided Elsewhere"
-
-
+    
     row.innerHTML = `
-        <td ><input type="checkbox" ${isChecked ? "checked" : ""} ${status != '2' ? "disabled" : ""}></td>
         <td class="doc-name">${formType} (${displayText})${newFound}</td>
-        <td class="import-cch-status">${show_cch_status}</td>
         <td style="text-align: center;"><span class="status-tag status-${status}">${statusText}</span></td>
+        <td class="center-row"><input type="checkbox" ${isChecked ? "checked" : ""} ${status != '2' ? "disabled" : ""}></td>
+        <td class="import-cch-status"><span class="status-tag status-${show_cch_status}">${show_cch_status}</span></td>
+        <td class="import-cch-timeStamp">${formatted}</td>
         <td class="center-cell">
             <button class="action-btn delete-btn" title="Remove">🗑</button>
         </td>
@@ -1204,13 +1167,14 @@ function export_tax_data() {
             // document.getElementById("list-returns").style.display = 'None';
             // document.getElementById("search-container").style.display = 'None';
             document.body.style.cursor = 'default';
+            document.getElementById('close-overlay2').disabled = false
         });
 }
 
 function updateImportedStatus() {
 
     export_tax_data()
-
+    
 }
 
 //===============================send to cch======================================================
@@ -1264,12 +1228,13 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
     const data = JSON.parse(jsonData);
     const importHistory = localStorage.getItem('importHistory');
     const imports = JSON.parse(importHistory);
+
     const header = data.ReturnHeader;
     returnId = `${header.TaxYear}${header.ReturnType}:${header.ClientID}:V${header.ReturnVersion}`
-    console.log(returnId)
+    
     const import_checked = getCheckedImportItems(imports)
-    console.log("debug")
-    console.log(import_checked)
+
+    document.getElementById('close-overlay2').disabled = true
 
     const payload = {
         return_id: returnId,
