@@ -981,20 +981,7 @@ document.getElementById('search-list-returns-btn').addEventListener('click', () 
             returnList.style.display = 'block'
             renderReturnsTable(data.returns)
 
-            // data.returns.forEach((item, index) => {
-            //     const label = document.createElement('label');
-            //     label.className = 'radio-item';
-
-            //     const input = document.createElement('input');
-            //     input.type = 'radio';
-            //     input.name = 'return_id';
-            //     input.value = item.ReturnID;
-            //     if (index === 0) input.checked = true; // chọn sẵn item đầu tiên
-
-            //     label.appendChild(input);
-            //     label.appendChild(document.createTextNode(item.ReturnID));
-            //     returnList.appendChild(label);
-            // });
+            
 
             document.getElementById('search-container').style.display = 'block'
         })

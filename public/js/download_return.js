@@ -689,8 +689,6 @@ function renderChecklist(jsonData, importHistory) {
             importHistory.forEach(doc => {
                 const hasValidYear = Array.isArray(doc.data)
                     && doc.data.every(item => item.tax_year == TAX_YEAR);
-                // console.log(hasValidYear)
-                // console.log(doc.link)
 
                 if (
                     (doc.form_type === worksheet &&
@@ -1055,6 +1053,7 @@ document.addEventListener("click", function (e) {
 
                         if (statusTag) {
                             statusTag.innerText = "Pending to Upload";
+                            statusTag.className = "status-tag status-3";
                         }
 
                         console.log("success")

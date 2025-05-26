@@ -75,12 +75,12 @@
 .download-excel,
 .btn-send {
   display: inline-block;
-  margin: 16px;
-  padding: 10px 20px;
+  margin: 12px;
+  padding: 8px 18px;
   background-color: #4f46e5;
   color: white;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 6px; 
   font-weight: bold;
   font-size: 14px;
   transition: background-color 0.2s ease;
@@ -159,7 +159,7 @@
 /* Wrapper toàn trang checklist */
 /* ===== PPC Checklist Container ===== */
 .checklist-group {
-  max-width: 600px;
+  max-width: 550px;
   margin: 0 auto;
   padding: 15px;
   background-color: transparent;
@@ -327,3 +327,5 @@ li input[type="checkbox"].na:checked::after {
   left: -2px;
   top: -2.5px;
 }
+
+
