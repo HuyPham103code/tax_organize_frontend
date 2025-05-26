@@ -364,12 +364,8 @@
         </div> -->
 
     </div>
-    <!-- footer -->
-    <!-- <div class="nav-buttons">
-        <button type="button" onclick="history.back()">← Back</button>
-        <button type="submit" id="btn-selected-checklist">Continue →</button>
-    </div> -->
-    <script>
+
+    <!-- <script>
         const params = new URLSearchParams(window.location.search);
         const fileUrl = params.get("file_url");
         console.log(fileUrl);
@@ -403,19 +399,17 @@
         }
         if (importedHistory != '') {
             importedHistory.forEach(history => {
-                const result = {
-                    recognized_documents: history.imported_json_data || []
-                };
-                // appendRecognizedDocsToTable(result);
+                
                 renderUploadedDocuments(importedHistory)
             });
         }
 
         function renderUploadedDocuments(importHistory) {
             const container = document.querySelector(".uploaded-documents .document-group");
-            container.innerHTML = ''; // Clear cũ
+            container.innerHTML = ''; // Xóa nội dung cũ
 
-            const seenKeys = new Set(); // Để lọc trùng
+            const seenKeys = new Set(); // Dùng để lọc trùng
+
             const displayFieldMappingImport = {
                 "W-2": ["Employer_Name", "TS"],
                 "1099-INT": ["Payer_Name", "Account_Number"],
@@ -427,17 +421,9 @@
                 "K-1 1065": ["TSJ", "Partnership's name"],
                 "K-1 1120S": ["TSJ", "Corporation's name"]
             };
-            // console.log(displayFieldMapping)
+
             importHistory.forEach(importItem => {
-
-                // ✅ Lọc tất cả doc có ít nhất 1 entity với tax_year === "2024"
-                const validDocs = (importItem.imported_json_data || []).filter(doc =>
-                    (doc.data || []).some(entity => entity.tax_year === "2024")
-                );
-
-                if (validDocs.length === 0) return;
-
-                const fileName = importItem.imported_json_url?.split("/").pop() || "(unknown)";
+                const fileName = importItem.pdf_path?.split("/").pop() || "(unknown)";
                 const details = document.createElement("details");
                 details.open = true;
 
@@ -446,29 +432,28 @@
                 summary.dataset.url = importItem.pdf_path;
                 summary.style.cursor = "pointer";
 
-
                 summary.addEventListener("click", function (e) {
                     e.preventDefault();
                     const fileUrl = summary.dataset.url;
                     if (!fileUrl) return;
-                    console.log(fileUrl)
-
-                    // Truyền thẳng URL (vì nó đã là URL đầy đủ, không encode)
-                    // window.open(fileUrl, "_blank"); ../templete/upload_summary.html
                     window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
                 });
 
                 details.appendChild(summary);
-
                 const ul = document.createElement("ul");
                 ul.className = "entity-list";
 
-                (importItem.imported_json_data || []).forEach(doc => {
-                    const formType = doc.form_type;
+                const docList = Array.isArray(importItem.data) ? [importItem] : [];
+
+                docList.forEach(docItem => {
+                    const formType = docItem.form_type;
+                    const entities = Array.isArray(docItem.data) ? docItem.data : [];
                     const mappingFields = displayFieldMappingImport[formType] || [];
-                    const entities = doc.data || [];
 
                     entities.forEach(entity => {
+                        // Bỏ qua nếu tax_year không khớp
+                        if (TAX_YEAR && entity.tax_year && entity.tax_year != TAX_YEAR) return;
+
                         const key = formType + "|" + mappingFields.map(f => (entity[f] || "").toLowerCase()).join("|");
                         if (seenKeys.has(key)) return;
                         seenKeys.add(key);
@@ -486,7 +471,6 @@
                 }
             });
         }
-
         //  showjson
 
         const overlay = document.querySelector(".detail-json-container");
@@ -503,8 +487,9 @@
             console.log(data)
             for (const item of data) {
                 if (item.pdf_path === fileUrl) {
+                    console.log(item)
                     console.log("✅ Found match:", item.imported_json_data[0]);
-                    displayJsonOverlay(item.imported_json_data[0])
+                    displayJsonOverlay(item.data)
                     // Thực hiện hành động nếu cần
                 }
             }
@@ -601,8 +586,200 @@
         //     });
         // });
 
+    </script> -->
+
+    <script>
+        // === Khởi tạo ===
+        const params = new URLSearchParams(window.location.search);
+        const fileUrl = params.get("file_url");
+        const iframe = document.getElementById("pdfFrame");
+        const overlay = document.querySelector(".detail-json-container");
+        const closeBtn = document.getElementById("close-overlay");
+        const savedTime = document.getElementById("saved-time");
+        const attachmentElement = document.getElementById('attachment-count');
+        const resultOverview = document.getElementById("result-overview");
+        const btnDownload = document.getElementById("btn-download-json");
+
+        // === Hiển thị file PDF nếu có ===
+        if (fileUrl && iframe) {
+            iframe.src = fileUrl;
+        }
+
+        // === Ctrl+S: Save time + tăng attachment count ===
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                savedTime.textContent = `✔️ Saved at ${hours}:${minutes}`;
+
+                const currentCount = parseInt(attachmentElement.textContent.match(/\d+/)?.[0] || "0");
+                attachmentElement.textContent = `📎 ${currentCount + 1} Attachments`;
+            }
+        });
+
+        // === Lấy importHistory & render UI ===
+        const importHistoryStr = localStorage.getItem("importHistory");
+        if (importHistoryStr) {
+            const importHistory = JSON.parse(importHistoryStr);
+
+            if (Array.isArray(importHistory)) {
+                renderUploadedDocuments(importHistory);
+
+                // Nếu đang xem chi tiết file cụ thể, show overlay JSON
+                if (fileUrl) {
+                    const matchedItem = importHistory.find(item => item.pdf_path === fileUrl);
+                    if (matchedItem && matchedItem.data) {
+                        overlay.style.display = "flex";
+                        displayJsonOverlay(matchedItem.data);
+                    }
+                }
+            }
+        }
+
+        // === Đóng overlay ===
+        closeBtn?.addEventListener("click", () => {
+            overlay.style.display = "none";
+        });
+
+        // === Hiển thị JSON chi tiết ===
+        function displayJsonOverlay(data) {
+            resultOverview.innerHTML = generateJsonTree(data);
+
+            resultOverview.querySelectorAll(".json-toggle").forEach(toggle => {
+                toggle.addEventListener("click", function () {
+                    const content = this.nextElementSibling;
+                    if (content) {
+                        const isCollapsed = content.classList.contains("json-collapsed");
+                        content.classList.toggle("json-collapsed", !isCollapsed);
+                        this.textContent = isCollapsed ? "[-] " : "[+] ";
+                    }
+                });
+            });
+
+            btnDownload.onclick = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "tax_data.json";
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+        }
+
+        // === Chuyển JSON thành HTML dạng tree ===
+        function generateJsonTree(json, isRoot = true) {
+            if (typeof json !== "object" || json === null) {
+                return `<span class="json-value">${JSON.stringify(json)}</span>`;
+            }
+
+            const isArray = Array.isArray(json);
+            let html = `<div class="json-container">`;
+
+            if (!isRoot) {
+                html += `<span class="json-toggle">[+] </span>`;
+                html += `<div class="json-content json-collapsed">`;
+            }
+
+            html += isArray ? "[" : "{";
+            html += `<ul class="json-list">`;
+
+            for (const key in json) {
+                const value = json[key];
+                const isObject = typeof value === "object" && value !== null;
+                const keyLabel = isArray ? "" : `<span class="json-key">"${key}"</span>: `;
+                html += `<li>${keyLabel}${isObject ? generateJsonTree(value, false) : `<span class="json-value">${JSON.stringify(value)}</span>`},</li>`;
+            }
+
+            html += `</ul>${isArray ? "]" : "}"}`;
+            if (!isRoot) html += `</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        // === Hiển thị danh sách uploaded documents ===
+        function renderUploadedDocuments(importHistory) {
+            const container = document.querySelector(".uploaded-documents .document-group");
+            if (!container) return;
+            container.innerHTML = '';
+
+            const seenKeys = new Set();
+            const TAX_YEAR = getTaxYear();  // Lấy từ localStorage nếu có
+
+            const displayFieldMappingImport = {
+                "W-2": ["Employer_Name", "TS"],
+                "1099-INT": ["Payer_Name", "Account_Number"],
+                "1099-DIV": ["Payer_Name", "Account_Number"],
+                "1099-R": ["Payer_Name"],
+                "Consolidated 1099": ["Payer name"],
+                "1099-SSA": ["TSJ"],
+                "K-1 1041": ["TSJ", "Name of k-1 entity"],
+                "K-1 1065": ["TSJ", "Partnership's name"],
+                "K-1 1120S": ["TSJ", "Corporation's name"]
+            };
+
+            importHistory.forEach(item => {
+                const fileName = item.pdf_path?.split("/").pop() || "(unknown)";
+                const details = document.createElement("details");
+                details.open = true;
+
+                const summary = document.createElement("summary");
+                summary.textContent = fileName;
+                summary.dataset.url = item.pdf_path;
+                summary.style.cursor = "pointer";
+
+                summary.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const fileUrl = this.dataset.url;
+                    if (fileUrl) {
+                        window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    }
+                });
+
+                details.appendChild(summary);
+                const ul = document.createElement("ul");
+                ul.className = "entity-list";
+
+                const entities = Array.isArray(item.data) ? item.data : [];
+                const mappingFields = displayFieldMappingImport[item.form_type] || [];
+
+                entities.forEach(entity => {
+                    if (TAX_YEAR && entity.tax_year && entity.tax_year != TAX_YEAR) return;
+
+                    const key = item.form_type + "|" + mappingFields.map(f => (entity[f] || "").toLowerCase()).join("|");
+                    if (seenKeys.has(key)) return;
+                    seenKeys.add(key);
+
+                    const displayText = mappingFields.map(f => entity[f] || "(missing)").join(" - ");
+                    const li = document.createElement("li");
+                    li.textContent = `${item.form_type} - ${displayText}`;
+                    ul.appendChild(li);
+                });
+
+                if (ul.children.length > 0) {
+                    details.appendChild(ul);
+                    container.appendChild(details);
+                }
+            });
+        }
+
+        // === Trích xuất TAX_YEAR từ localStorage jsonData
+        function getTaxYear() {
+            const jsonDataStr = localStorage.getItem("jsonData");
+            if (!jsonDataStr) return null;
+            try {
+                const data = JSON.parse(jsonDataStr);
+                return data?.ReturnHeader?.TaxYear || null;
+            } catch (e) {
+                console.error("Invalid jsonData in localStorage");
+                return null;
+            }
+        }
     </script>
-    <!-- <script type="module" src="../js/upload_document.js"></script> -->
+
 
 </body>
 

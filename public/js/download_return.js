@@ -707,7 +707,7 @@ function renderChecklist(jsonData, importHistory) {
             });
 
             if (isChecked) {
-                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status,  true, '', status);
+                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status, true, '', status);
                 checkedRows.push(tableRow);
             } else {
                 tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status, false, '');
@@ -722,24 +722,31 @@ function renderChecklist(jsonData, importHistory) {
         let cch_status = false
         let time_stamp = ''
         let cch_import_status = false
+        console.log(link)
 
-        if (Object.keys(entity.data || {}).length > 0) {
-            return
-        }
+        // if (Object.keys(entity.data || {}).length > 0) {
+        //     return
+        // }
+        console.log(111)
         // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
         if (!Array.isArray(data) || !matchField) return;
 
         // key = return_id hoặc id của entity (tuỳ chọn)
-        const key = `entity_${index}`;
+        const key = entity.id;
 
         // Trường hợp chưa có link => hiển thị là new item
         if (link === "New Item" || !link) {
+            console.log(123)
             const entityData = data[0] || {};
             const displayText = (entityData[matchField] || "(missing)").toString();
 
+            if (entityData["tax_year"] == '2016') {
+                return
+            }
+
             cch_status = entity.is_imported_to_cch
-            time_stamp = doc.imported_to_cch_at
-            cch_import_status = doc.cch_import_status
+            time_stamp = entity.imported_to_cch_at
+            cch_import_status = entity.cch_import_status
 
             const tableRow = createTableRow(
                 form_type,
@@ -1006,7 +1013,7 @@ function createTableRow(formType, displayText, key, cch_status, timeStamp, cch_i
     else if (status === '2') statusText = "✅ Uploaded";
     else if (status === '4') statusText = "Not Applicable"
     else if (status === '5') statusText = "Provided Elsewhere"
-    
+
     row.innerHTML = `
         <td class="doc-name">${formType} (${displayText})${newFound}</td>
         <td style="text-align: center;"><span class="status-tag status-${status}">${statusText}</span></td>
@@ -1174,7 +1181,7 @@ function export_tax_data() {
 function updateImportedStatus() {
 
     export_tax_data()
-    
+
 }
 
 //===============================send to cch======================================================
@@ -1211,7 +1218,11 @@ function getCheckedImportItems(importHistory) {
             !checkbox.disabled &&          // ✅ Không bị disable
             importId !== '0'
         ) {
-            checkedIds.push(Number(importId)); // Đưa về kiểu số để so sánh chính xác
+            //checkedIds.push(importId) // Đưa về kiểu số để so sánh chính xác
+            const idNum = parseInt(importId.match(/\d+$/)?.[0]);
+            if (!isNaN(idNum)) {
+                checkedIds.push(idNum); // ✅ Đưa vào mảng dưới dạng số
+            }
         }
     });
 
@@ -1231,7 +1242,7 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
 
     const header = data.ReturnHeader;
     returnId = `${header.TaxYear}${header.ReturnType}:${header.ClientID}:V${header.ReturnVersion}`
-    
+
     const import_checked = getCheckedImportItems(imports)
 
     document.getElementById('close-overlay2').disabled = true
@@ -1249,7 +1260,8 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
     // showUploadAlertUpload('success', 'upload successfully!', 'upload-alert-placeholder-processing2');
     // return
 
-
+    console.log(payload)
+    
     showLoading()
     try {
 
@@ -1390,23 +1402,28 @@ document.getElementById("close-overlay2").addEventListener("click", () => {
 
 //========================================send pbc list============================
 document.getElementById("btn-send-client").addEventListener('click', async () => {
-    var email = 'henry@silversea-analytics.com';
+    var email = 'info@silversea-analytics.com';
     const jsonData = localStorage.getItem("jsonData");
     const importHistory = localStorage.getItem("importHistory");
-    var clientName = ''
+    var clientName = 'info@silversea-analytics.com'
+
     var taxYear = '2024'
     if (jsonData) {
         const data = JSON.parse(jsonData)
         const general = data.General || {};
-        console.log(general)
-        clientName = `${general["First name - TP"]} ${general["Last name - TP"]}`
-        console.log(clientName)
-        email = general["Primary email address"]
-        console.log(email)
+        if (general) {
+            clientName = `${general["First name - TP"]} ${general["Last name - TP"]}`
+            const primaryEmail = general["Primary email address"]
+            if (primaryEmail && primaryEmail !== "undefined" && primaryEmail !== "null") {
+                email = primaryEmail;
+            }
+        }
         const returnHeader = data.ReturnHeader || {};
         taxYear = returnHeader.TaxYear
     }
     console.log(taxYear)
+    console.log(clientName)
+    console.log(email)
     // return
     showLoading();
 

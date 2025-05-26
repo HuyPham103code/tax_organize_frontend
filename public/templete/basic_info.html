@@ -51,10 +51,15 @@
             <div class="right">
                 <div class="client-meta">
                     <div class="client-details">
-                        <span class="client-line">
-                            <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John
-                                Doe</strong>
-                        </span>
+                        <div style="display: flex;">
+                            <span class="client-line">
+                                <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John
+                                    Doe</strong>
+                            </span>
+                            <span class="client-line" style="margin-left: 30px;">
+                                <span class="label">Return ID:</span> <strong id="client-line-returnID">John Doe</strong>
+                            </span>
+                        </div>
                         <span class="client-line">
                             <i class="icon">✉️</i> <span class="label">Email:</span> <strong
                                 id="primary-email"></strong>
@@ -277,10 +282,12 @@
                 </div>
             </div>
         </div>
+        
 
     </div>
 
-    <script>
+    <script type="module">
+        import {getReturnID} from '../js/utils/get_data_header.js'
         function renderInfo(data) {
             // General → Taxpayer
             const general = data.General || {};
@@ -416,6 +423,12 @@
             </div>`;
                 container.insertAdjacentHTML("beforeend", depHTML);
             });
+
+            // render return id
+            var returnid_element = document.getElementById("client-line-returnID")
+            returnid_element.innerHTML = getReturnID()
+
+            save_attachments()
         });
 
         // Hàm map lại chuỗi Filing status từ JSON về giá trị option
@@ -602,9 +615,7 @@
             const currentCount = parseInt(attachmentElement.textContent.match(/\d+/)[0]);
             attachmentElement.textContent = `📎 ${count} Attachments`;
         }
-        document.addEventListener('DOMContentLoaded', function () {
-            save_attachments()
-        })
+        
 
     </script>
 

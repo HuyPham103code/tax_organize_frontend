@@ -1,6 +1,7 @@
 console.log("🔥 PAGE LOADED");
 import { showUploadAlertUpload } from './utils/alertMessage.js';
 import { API_BASE_URL } from './utils/config.js'
+import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 
 // handle showing top 20 recent files
 document.addEventListener("DOMContentLoaded", function () {
@@ -89,6 +90,7 @@ document.getElementById("upload-btn").addEventListener("click", function (e) {
     }
     // e.preventDefault(); 
     
+    
     uploadExcel();
 
     // console.log('do')
@@ -122,6 +124,7 @@ async function uploadExcel() {
         return;
     }
 
+    showLoading()
     if (!fileInput.files.length) {
         showUploadAlertUpload('warning', '⚠️ Please select a file to upload.', 'upload-alert-placeholder-uploadfile');
     } else {
@@ -153,6 +156,7 @@ async function uploadExcel() {
             const finalStatus = await pollUntilDone(taskId);
 
             showUploadAlertUpload('success', 'Upload sucessfully!', 'upload-alert-placeholder-processing2');
+
         } else {
             var message = "❌ Upload failed: " + (data.error || "Unknown error")
             showUploadAlertUpload('danger', message, 'upload-alert-placeholder-processing2');
@@ -207,6 +211,7 @@ function pollUntilDone(taskId) {
                         uploadBtn.disabled = false;
                         uploadBtn.innerText = "Upload & Process";
                         resolve(statusData);
+                        hideLoading()
                     }
                 })
                 .catch(err => {

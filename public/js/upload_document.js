@@ -1,6 +1,7 @@
 import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 import { API_BASE_URL } from './utils/config.js'
 import { toggleVisibility } from './utils/toggleHide.js'
+import {getReturnID} from './utils/get_data_header.js'
 
 var RETURN_ID = ''
 var jsonData = ''
@@ -83,6 +84,10 @@ window.addEventListener('DOMContentLoaded', () => {
         toggleVisibility("confirm-btn", "show")
         renderUploadedDocuments(importedHistory)
     }
+
+    // render return id
+    var returnid_element = document.getElementById("client-line-returnID")
+    returnid_element.innerHTML = getReturnID()
 
 });
 
@@ -327,7 +332,7 @@ function renderChecklist(jsonData, importHistory) {
                 const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
                 const isThisYear = Array.isArray(doc.data)
                     && doc.data.every(d => String(d.tax_year) === String(year));
-                
+
                 if (isSameType && isSameLink && isThisYear) {
                     isChecked = true;
                 }
@@ -1532,7 +1537,7 @@ function appendRecognizedDocsToTable(result) {
         const formType = doc.form_type;
         const linkFromDoc = doc.link || "";
         const entities = doc.data || [];
-        
+
         if (typeof doc.data === 'object' && !Array.isArray(doc.data) && Object.keys(doc.data).length === 0) {
             return;
         }
@@ -1609,11 +1614,10 @@ function appendRecognizedDocsToTable(result) {
 
 function renderUploadedDocuments(importHistory) {
     const container = document.querySelector(".uploaded-documents .document-group");
-    container.innerHTML = ''; // Clear cũ
-    console.log("checked")
-    console.log(importHistory)
+    container.innerHTML = ''; // Xóa nội dung cũ
 
-    const seenKeys = new Set(); // Để lọc trùng
+    const seenKeys = new Set(); // Dùng để lọc trùng
+
     const displayFieldMappingImport = {
         "W-2": ["Employer_Name", "TS"],
         "1099-INT": ["Payer_Name", "Account_Number"],
@@ -1625,9 +1629,9 @@ function renderUploadedDocuments(importHistory) {
         "K-1 1065": ["TSJ", "Partnership's name"],
         "K-1 1120S": ["TSJ", "Corporation's name"]
     };
-    // console.log(displayFieldMapping)
+
     importHistory.forEach(importItem => {
-        const fileName = importItem.imported_json_url?.split("/").pop() || "(unknown)";
+        const fileName = importItem.pdf_path?.split("/").pop() || "(unknown)";
         const details = document.createElement("details");
         details.open = true;
 
@@ -1636,30 +1640,28 @@ function renderUploadedDocuments(importHistory) {
         summary.dataset.url = importItem.pdf_path;
         summary.style.cursor = "pointer";
 
-
         summary.addEventListener("click", function (e) {
             e.preventDefault();
             const fileUrl = summary.dataset.url;
             if (!fileUrl) return;
-            console.log(fileUrl)
-
-            // Truyền thẳng URL (vì nó đã là URL đầy đủ, không encode)
-            // window.open(fileUrl, "_blank"); ../templete/upload_summary.html
             window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
         });
 
         details.appendChild(summary);
-
         const ul = document.createElement("ul");
         ul.className = "entity-list";
 
-        (importItem.imported_json_data || []).forEach(doc => {
-            if (!doc.data.every(entity => entity.tax_year == TAX_YEAR)) return;
-            const formType = doc.form_type;
+        const docList = Array.isArray(importItem.data) ? [importItem] : [];
+
+        docList.forEach(docItem => {
+            const formType = docItem.form_type;
+            const entities = Array.isArray(docItem.data) ? docItem.data : [];
             const mappingFields = displayFieldMappingImport[formType] || [];
-            const entities = doc.data || [];
 
             entities.forEach(entity => {
+                // Bỏ qua nếu tax_year không khớp
+                if (TAX_YEAR && entity.tax_year && entity.tax_year != TAX_YEAR) return;
+
                 const key = formType + "|" + mappingFields.map(f => (entity[f] || "").toLowerCase()).join("|");
                 if (seenKeys.has(key)) return;
                 seenKeys.add(key);
@@ -1677,6 +1679,7 @@ function renderUploadedDocuments(importHistory) {
         }
     });
 }
+
 
 
 

@@ -58,11 +58,18 @@
             <div class="right">
                 <div class="client-meta">
                     <div class="client-details">
+                        <div style="display: flex;">
+                            <span class="client-line">
+                                <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John
+                                    Doe</strong>
+                            </span>
+                            <span class="client-line" style="margin-left: 30px;">
+                                <span class="label">Return ID:</span> <strong id="client-line-returnID"></strong>
+                            </span>
+                        </div>
                         <span class="client-line">
-                            <i class="icon">👤</i> <span class="label">Client:</span> <strong id="client-name">John Doe</strong>
-                        </span>
-                        <span class="client-line">
-                            <i class="icon">✉️</i> <span class="label">Email:</span> <strong id="primary-email"></strong>
+                            <i class="icon">✉️</i> <span class="label">Email:</span> <strong
+                                id="primary-email"></strong>
                         </span>
                         <div class="client-status">
                             <span class="saved-time" id="saved-time">Not save</span>
@@ -77,7 +84,7 @@
         <!-- content -->
         <div class="summary-wrapper">
             <h2>PPC List Summary</h2>
-            <p>Please double-check if there are any missing documents for this year. Click "Complete" 
+            <p>Please double-check if there are any missing documents for this year. Click "Complete"
                 once all documents are addressed.</p>
 
             <!-- <div class="checklist-group" id="checklist-group">
@@ -112,7 +119,7 @@
                 </ul>
             </div>
 
-            
+
             <button id="btn-send-to-client" class="btn-send">Save</button>
             <div id="alert-placeholder-send-client" style="margin-top: 15px;"></div>
         </div>

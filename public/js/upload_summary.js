@@ -2,6 +2,7 @@
 import { showUploadAlertUpload } from './utils/alertMessage.js';
 import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 import { API_BASE_URL } from './utils/config.js'
+import {getReturnID} from './utils/get_data_header.js'
 //=======================================================================
 var jsonData = ''
 var importHistory = ''
@@ -28,10 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
 
-    console.log("do1")
     renderChecklist(jsonData, importedHistory)
-    console.log("do2")
     save_attachments()
+    // render return id
+    var returnid_element = document.getElementById("client-line-returnID")
+    returnid_element.innerHTML = getReturnID()
 });
 
 // document.getElementById('btn-download-excel').addEventListener('click', function (e) {
@@ -494,8 +496,15 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
             status: value.status
         });
     }
+    const jsonData = localStorage.getItem("jsonData");
 
+    if (jsonData){
+        const data = JSON.parse(jsonData)
+        const returnHeader = data.ReturnHeader || {};
+        var returnID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
+    }
     console.log("✅ Selected items:", results);
+    console.log(returnID)
 
     // TODO: gửi results lên server
     fetch(`${API_BASE_URL}/api/cch-import/create-import-from-checklist/`, {
@@ -504,7 +513,7 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            return_id: "2024I:1234567.001:V5",
+            return_id: returnID,
             checklist: results  // kết quả từ statusMap như bạn đã có
         })
     })
