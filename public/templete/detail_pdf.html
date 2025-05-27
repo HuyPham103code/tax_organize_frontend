@@ -633,7 +633,7 @@
                     const matchedItem = importHistory.find(item => item.pdf_path === fileUrl);
                     if (matchedItem && matchedItem.data) {
                         overlay.style.display = "flex";
-                        displayJsonOverlay(matchedItem.data);
+                        displayJsonOverlay(matchedItem.data[0]);
                     }
                 }
             }

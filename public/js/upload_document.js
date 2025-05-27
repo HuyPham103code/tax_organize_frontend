@@ -1,7 +1,7 @@
 import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 import { API_BASE_URL } from './utils/config.js'
 import { toggleVisibility } from './utils/toggleHide.js'
-import {getReturnID} from './utils/get_data_header.js'
+import { getReturnID } from './utils/get_data_header.js'
 
 var RETURN_ID = ''
 var jsonData = ''
@@ -19,18 +19,22 @@ window.addEventListener('DOMContentLoaded', () => {
         importedHistory = JSON.parse(importHistory);
     }
 
-    let checklistData = null;
+    var checklistData = null;
 
     const fromSummaryPage = document.referrer.includes("upload_summary.html");
 
-    if (jsonData) {
+    if (jsonData != "null") {
         checklistData = JSON.parse(jsonData);
         console.log("📌 Rendering from checklistData fallback");
         console.log(checklistData)
-        renderChecklist(checklistData, importedHistory);
-    }
+        
+        //======get selecct json
+        generateEntityListFromOCR(checklistData)
+        console.log(globalEntityOptions)
+        // render return id
+        var returnid_element = document.getElementById("client-line-returnID")
+        returnid_element.innerHTML = getReturnID()
 
-    if (jsonData) {
         checklistData = checklistData || JSON.parse(jsonData); // nếu chưa parse ở trên
 
         const filteredChecklistData = Object.fromEntries(
@@ -39,7 +43,6 @@ window.addEventListener('DOMContentLoaded', () => {
             )
         );
 
-        // const uploadResult = JSON.parse(localStorage.getItem('upload_result') || '{}');
         const returnHeader = checklistData.ReturnHeader || {};
         if (returnHeader) {
             RETURN_ID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
@@ -50,20 +53,21 @@ window.addEventListener('DOMContentLoaded', () => {
             console.log(general["Primary email address"])
             document.getElementById("primary-email").innerText = general["Primary email address"];
             document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
-            // console.log(TAX_YEAR)
+
         }
-        // displayJsonOverlay({
-        //     returnHeader: returnHeader,
-        //     Data: filteredChecklistData
-        // });
     }
 
-
-    //======get selecct json
-    generateEntityListFromOCR(checklistData)
-    console.log(globalEntityOptions)
+    
+    var returnData = localStorage.getItem('returnID');
+    var textReturnID = JSON.parse(returnData)
+    console.log(textReturnID)
+    document.getElementById("client-line-returnID").innerHTML = textReturnID
+    TAX_YEAR = textReturnID.slice(0,4)
+    RETURN_ID = textReturnID
+    renderChecklist(checklistData, importedHistory);
 
     if (importedHistory && importedHistory.length) {
+        console.log("check123")
         importedHistory.forEach(entity => {
             const result = {
                 recognized_documents: [entity], // mỗi entity là 1 "doc"
@@ -85,9 +89,6 @@ window.addEventListener('DOMContentLoaded', () => {
         renderUploadedDocuments(importedHistory)
     }
 
-    // render return id
-    var returnid_element = document.getElementById("client-line-returnID")
-    returnid_element.innerHTML = getReturnID()
 
 });
 
@@ -283,6 +284,11 @@ function renderChecklist2(data, importedHistory) {
 
 
 function renderChecklist(jsonData, importHistory) {
+    if (!jsonData) {
+        console.log("do")
+        renderNewItem(importHistory)
+        return
+    }
     console.log("start render on the right");
     const ulThisYear = document.querySelector(".result_checklist1");
     const ulNewFound = document.querySelector(".result_checklist-new-found1");
@@ -376,6 +382,45 @@ function renderChecklist(jsonData, importHistory) {
     console.log("end render 123");
 }
 
+function renderNewItem(importHistory){
+
+    if(importHistory == [] || !importHistory) return
+
+    const linkFieldMapping = {
+        "W-2": "Employer_Name",
+        "1099-DIV": "Payer_Name"
+    };
+
+    const ulNewFound = document.querySelector(".result_checklist-new-found1");
+    ulNewFound.innerHTML = '';
+
+    importHistory.forEach(entity => {
+        const { form_type, link, data, status } = entity;
+        const matchField = linkFieldMapping[form_type];
+
+        const isThisYear = Array.isArray(data) && data.every(d => String(d.tax_year) === String(TAX_YEAR));
+        
+        if (!isThisYear || !Array.isArray(data) || !matchField) return;
+
+        const isNew = true //!link || link === "New Item";
+        const entityData = data[0] || {};
+        const displayText = (entityData[matchField] || "(missing)").toString();
+        const fullKey = form_type + " - " + displayText;
+
+        // ✅ Nếu là "New Item" và chưa có ở danh sách chính thì thêm vào New Found
+        // const alreadyRendered = !!ulThisYear.querySelector(`li[data-key="${fullKey}"]`);
+        if (isNew) {
+            const li = document.createElement("li");
+            li.innerHTML = `<input type="checkbox" checked> ${form_type} (${displayText})`;
+            li.classList.add("new-found");
+            li.setAttribute("data-key", fullKey);
+            ulNewFound.appendChild(li);
+        }
+    });
+
+    const labelNewFound = document.querySelector(".new-found-label1");
+    labelNewFound.style.display = ulNewFound.children.length > 0 ? "block" : "none";
+}
 
 
 
@@ -709,7 +754,8 @@ async function uploadAndAnalyzeFile() {
     showLoading()
     const fileInput = document.getElementById("fileInput");
     const file = fileInput.files[0];
-    console.log(RETURN_ID)
+    var returnid = document.getElementById('client-line-returnID').innerText
+    console.log(returnid)
 
     if (!file) {
         alert("Please choose a pdf file to upload");
@@ -722,7 +768,7 @@ async function uploadAndAnalyzeFile() {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("return_id", RETURN_ID);
+    formData.append("return_id", returnid);
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/cch-import/upload-ocr-pdf/`, {
@@ -732,6 +778,8 @@ async function uploadAndAnalyzeFile() {
 
         const result = await response.json();
         // const result = get_data()
+        if (!result.success)
+            return
 
         // 1. Lấy dữ liệu cũ từ localStorage
         const oldHistoryStr = localStorage.getItem("importHistory");
@@ -1522,6 +1570,7 @@ function extractOriginalFilename(url) {
 const seen = new Set(); // ✅ Dùng để tránh render trùng
 
 function appendRecognizedDocsToTable(result) {
+
     const tableBody = document.querySelector(".validation-table tbody");
     if (!tableBody) return;
 
@@ -1531,6 +1580,8 @@ function appendRecognizedDocsToTable(result) {
     };
 
     const file_name = result.file_url ? extractOriginalFilename(result.file_url) : "";
+
+    const returnid = document.getElementById('client-line-returnID').innerText;
 
     result.recognized_documents.forEach(doc => {
         const page = doc.page_number;
@@ -1548,8 +1599,9 @@ function appendRecognizedDocsToTable(result) {
 
             if (seen.has(key)) return;
             seen.add(key);
-            // console.log(entities.data)
-            const isValid = entity.tax_year == TAX_YEAR;
+
+            const isValid = entity.tax_year == returnid.slice(0, 4);
+
             const displayText = displayFields.map(f => entity[f] || "(missing)").join(" - ");
 
             const tr = document.createElement("tr");
@@ -1582,6 +1634,9 @@ function appendRecognizedDocsToTable(result) {
 
                     const full_key = `${formType} - ${displayText}`.toLowerCase();
                     const optionLabel = opt.label.toLowerCase();
+                    console.log(optionLabel)
+                    console.log(full_key)
+                    console.log(linkFromDoc)
 
                     if (
                         optionLabel === linkFromDoc.toLowerCase() ||
@@ -1603,6 +1658,19 @@ function appendRecognizedDocsToTable(result) {
 
                 if (!matched) newItem.selected = true;
                 if (!isValid) invalidItem.selected = true;
+            }
+            else {
+                const newItem = new Option("New Item", "New Item");
+                const invalidItem = new Option("Cancel", "Cancel");
+
+                select.appendChild(newItem);
+                select.appendChild(invalidItem);
+
+                if (isValid) {
+                    newItem.selected = true;
+                } else {
+                    invalidItem.selected = true;
+                }
             }
 
             tr.querySelector("td:last-child").appendChild(select);

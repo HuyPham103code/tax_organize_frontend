@@ -7,6 +7,7 @@ import { API_BASE_URL } from './utils/config.js'
 
 let totalEntities = 0;
 let CURRENT_RETURN_ID
+var returnID = ''
 
 window.addEventListener("DOMContentLoaded", function () {
     const data = localStorage.getItem('jsonData');
@@ -22,6 +23,12 @@ window.addEventListener("DOMContentLoaded", function () {
 
     renderChecklist(jsonData, importHistory);
     renderStatusBox(jsonData, importHistory);
+
+    renderReturnHeader()
+
+    var returnData = localStorage.getItem('returnID');
+    returnID = JSON.parse(returnData)
+    console.log(returnID)
 });
 
 
@@ -618,10 +625,28 @@ function get_data() {
 //     });
 // });
 
+function renderReturnHeader(){
+    var returnData = localStorage.getItem('returnID');
+    var textReturnID = JSON.parse(returnData)
+    console.log(textReturnID)
+    const parts = textReturnID.split(':');
+    document.getElementById("return-header-section").style.display = "block";
+    document.getElementById("tax-year").textContent = textReturnID.slice(0,4) || "(missing)";
+    document.getElementById("return-type").textContent = textReturnID.slice(4,5) || "(missing)";
+    document.getElementById("version").textContent = parts[2] || "(missing)";
+    document.getElementById("client-id").textContent = parts[1] || "(missing)";
+}
 
 function renderChecklist(jsonData, importHistory) {
     toggleVisibility("tax-summary-container", "show");
+
+    if(jsonData == {} || jsonData == '' || !jsonData ) 
+    {
+        renderNewItem(importHistory)
+        return
+    }
     var TAX_YEAR = ''
+
     // Hiển thị thông tin header
     if (jsonData.ReturnHeader) {
         const header = jsonData.ReturnHeader;
@@ -766,6 +791,67 @@ function renderChecklist(jsonData, importHistory) {
 
     [...checkedRows, ...uncheckedRows].forEach(row => tableBody.appendChild(row));
 
+}
+
+function renderNewItem(importHistory){
+    
+    const checkedRows = [];
+    const uncheckedRows = [];
+
+    const tableBody = document.getElementById("document-table-body");
+    tableBody.innerHTML = '';
+
+    const linkFieldMapping = {
+        "W-2": "Employer_Name",
+        "1099-DIV": "Payer_Name"
+    };
+
+    importHistory.forEach((entity, index) => {
+        const { form_type, link, status, data } = entity;
+        const matchField = linkFieldMapping[form_type];
+        let cch_status = false
+        let time_stamp = ''
+        let cch_import_status = false
+        
+        // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
+        if (!Array.isArray(data) || !matchField) return;
+
+        // key = return_id hoặc id của entity (tuỳ chọn)
+        const key = entity.id;
+
+        // Trường hợp chưa có link => hiển thị là new item
+        if (link === "New Item" || !link) {
+            console.log(123)
+            const entityData = data[0] || {};
+            const displayText = (entityData[matchField] || "(missing)").toString();
+
+            if (entityData["tax_year"] == '2016') {
+                return
+            }
+
+            cch_status = entity.is_imported_to_cch
+            time_stamp = entity.imported_to_cch_at
+            cch_import_status = entity.cch_import_status
+
+            const tableRow = createTableRow(
+                form_type,
+                displayText,
+                key,
+                cch_status,
+                time_stamp,
+                cch_import_status,
+                true,
+                " (New item)",
+                status
+            );
+
+            tableBody.appendChild(tableRow);
+            checkedRows.push(tableRow);
+        }
+    });
+
+
+    [...checkedRows, ...uncheckedRows].forEach(row => tableBody.appendChild(row));
 }
 
 document.addEventListener("click", function (e) {
@@ -1073,19 +1159,21 @@ document.addEventListener("click", function (e) {
 //======================================remove all imports===========================
 document.getElementById("btn-generate-pbc").addEventListener('click', () => {
     showLoading()
-    // return
+    console.log(returnID)
+    //  return
     fetch(`${API_BASE_URL}/api/cch-import/delete-imports/`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
         },
+        body: JSON.stringify({ return_id: returnID })
     })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
                 // upload-alert-placeholder-search
                 console.log(data)
-                export_tax_data()
+                //export_tax_data()
 
                 showUploadAlertUpload('success', "remove all imports success", 'upload-alert-placeholder-checklist');
             } else {
@@ -1107,7 +1195,7 @@ document.getElementById("btn-generate-pbc").addEventListener('click', () => {
     }
 
     renderStatusBox(jsonData, imported)
-
+    hideLoading()
 })
 
 //==================================export data with return id============================
@@ -1115,14 +1203,12 @@ function export_tax_data() {
 
     var json = localStorage.getItem('jsonData');
     var jsonData = JSON.parse(json);
-    const returnHeader = jsonData.ReturnHeader || {};
-    var returnID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
-    console.log(returnID)
-    console.log("checcccck")
+    
 
     const summary_container = document.getElementById('tax-summary-container')
     showLoading();
     document.body.style.cursor = 'wait';
+    console.log(returnID)
 
     fetch(`${API_BASE_URL}/api/cch-import/full_export_pipeline2/`, {
         method: "POST",
@@ -1239,15 +1325,14 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
     const importHistory = localStorage.getItem('importHistory');
     const imports = JSON.parse(importHistory);
 
-    const header = data.ReturnHeader;
-    returnId = `${header.TaxYear}${header.ReturnType}:${header.ClientID}:V${header.ReturnVersion}`
+    
 
     const import_checked = getCheckedImportItems(imports)
 
     document.getElementById('close-overlay2').disabled = true
 
     const payload = {
-        return_id: returnId,
+        return_id: returnID,
         imports: import_checked
     };
 
@@ -1277,7 +1362,7 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
             const response = await fetch(data.excel_url);
             const blob = await response.blob();
 
-            const safeReturnId = returnId.replace(/[:/\\?%*|"<>]/g, "-");
+            const safeReturnId = returnID.replace(/[:/\\?%*|"<>]/g, "-");
             const filename = `1040 template - [${safeReturnId}].xlsx`;
 
             const link = document.createElement("a");
@@ -1420,6 +1505,13 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
         const returnHeader = data.ReturnHeader || {};
         taxYear = returnHeader.TaxYear
     }
+
+    if (importHistory){
+        const imports = JSON.parse(importHistory)
+        imports.forEach(item => {
+            console.log(item.id)
+        })
+    }
     console.log(taxYear)
     console.log(clientName)
     console.log(email)
@@ -1435,7 +1527,7 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
                 clientName: clientName,
                 taxYear: taxYear,
                 jsonData: jsonData,
-                importHistory: importHistory
+                importHistory: importHistory  
             })
         });
 

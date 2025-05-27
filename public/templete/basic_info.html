@@ -57,7 +57,8 @@
                                     Doe</strong>
                             </span>
                             <span class="client-line" style="margin-left: 30px;">
-                                <span class="label">Return ID:</span> <strong id="client-line-returnID">John Doe</strong>
+                                <span class="label">Return ID:</span> <strong id="client-line-returnID">John
+                                    Doe</strong>
                             </span>
                         </div>
                         <span class="client-line">
@@ -282,12 +283,14 @@
                 </div>
             </div>
         </div>
-        
+
 
     </div>
 
     <script type="module">
-        import {getReturnID} from '../js/utils/get_data_header.js'
+        import { getReturnID } from '../js/utils/get_data_header.js'
+        import { API_BASE_URL } from '../js/utils/config.js'
+
         function renderInfo(data) {
             // General → Taxpayer
             const general = data.General || {};
@@ -351,17 +354,58 @@
             });
         }
         //  load data from local storage
-        document.addEventListener("DOMContentLoaded", function () {
-            console.log('do')
-            const jsonStr = localStorage.getItem("jsonData");
-            if (!jsonStr) return;
+        document.addEventListener("DOMContentLoaded", async function () {
+            //===fix===
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');  // Lấy token từ URL nếu có
+            console.log("do1")
+            var data = {}
+            var importHistory = {}
 
-            const data = JSON.parse(jsonStr);
+            if (token) {
+                console.log('Fetching data from token');
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/cch-import/get-data-from-email/?token=${token}`);
+                    const res = await response.json();
 
+                    if (res.success) {
+                        // Lấy dữ liệu từ backend (có jsonData và importHistory)
+                        data = JSON.parse(res.data.jsonData); // Parse jsonData from response
+                        importHistory = JSON.parse(res.data.importHistory); // Parse importHistory from response
+
+                        localStorage.setItem('jsonData', JSON.stringify(data));
+                        localStorage.setItem('importHistory', JSON.stringify(importHistory));
+                    } else {
+                        console.error("Failed to get data from token:", res.error);
+                    }
+                } catch (err) {
+                    console.error("Error fetching data from token:", err);
+                }
+
+            }
+            else {
+                // Trường hợp lấy data từ localStorage
+                console.log('Fetching data from localStorage');
+                const jsonStr = localStorage.getItem("jsonData");
+                const imports = localStorage.getItem("importHistory");
+                if (!jsonStr || !imports) return;
+
+                data = JSON.parse(jsonStr);
+                importHistory = JSON.parse(imports);
+            }
+
+            if (data == {} || !data) {
+                var returnData = localStorage.getItem('returnID');
+                var textReturnID = JSON.parse(returnData)
+                console.log(textReturnID)
+                document.getElementById("client-line-returnID").innerHTML = textReturnID
+                return
+            }
+            console.log(data)
             // General → Taxpayer
             const general = data.General || {};
             console.log(general)
-            console.log(general["Primary email address"])
+
             document.getElementById("primary-email").innerText = general["Primary email address"];
             document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
 
@@ -428,7 +472,8 @@
             var returnid_element = document.getElementById("client-line-returnID")
             returnid_element.innerHTML = getReturnID()
 
-            save_attachments()
+            save_attachments(importHistory)
+
         });
 
         // Hàm map lại chuỗi Filing status từ JSON về giá trị option
@@ -566,12 +611,8 @@
             }
         });
 
-        function save_attachments() {
-            var importedHistory = ''
-            var importHistory = localStorage.getItem("importHistory");
-            if (importHistory) {
-                importedHistory = JSON.parse(importHistory);
-            }
+        function save_attachments(importedHistory) {
+            console.log("Ngo Thi Yen")
             console.log(importedHistory)
             var count = importedHistory.length
             const now = new Date();
@@ -588,7 +629,7 @@
                 import_time = latestTime
                 import_time = formatDate(import_time)
                 console.log("Latest import time:", latestTime.toLocaleString());  // Hiển thị định dạng dễ đọc
-                console.log("Latest file:", latestImport.imported_json_url);     // Có thể dùng tên file nếu cần
+
             }
             function formatDate(dateStr) {
                 const date = new Date(dateStr);
@@ -604,10 +645,6 @@
                 return `${MM}:${DD}:${YYYY} ${HH}:${mm}:${SS}`;
             }
 
-            event.preventDefault(); // chặn hành vi lưu trang mặc định
-
-            // Cập nhật thời gian
-
             document.getElementById('saved-time').textContent = `✔️ Saved at ${import_time}`;
 
             // Giả lập tăng attachment count
@@ -615,7 +652,7 @@
             const currentCount = parseInt(attachmentElement.textContent.match(/\d+/)[0]);
             attachmentElement.textContent = `📎 ${count} Attachments`;
         }
-        
+
 
     </script>
 

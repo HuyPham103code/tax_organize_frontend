@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (importHistory) {
         importedHistory = JSON.parse(importHistory);
     }
-    if( jsonData){
+    if( jsonData != "null"){
         jsonData = JSON.parse(jsonData)
         const returnHeader = jsonData.ReturnHeader || {};
         if (returnHeader) {
@@ -26,14 +26,21 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("primary-email").innerText = general["Primary email address"];
             document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
         }
+        var returnid_element = document.getElementById("client-line-returnID")
+        returnid_element.innerHTML = getReturnID()
     }
     
 
     renderChecklist(jsonData, importedHistory)
     save_attachments()
     // render return id
-    var returnid_element = document.getElementById("client-line-returnID")
-    returnid_element.innerHTML = getReturnID()
+
+    // render return id
+    var returnData = localStorage.getItem('returnID');
+    var textReturnID = JSON.parse(returnData)
+    console.log(textReturnID)
+    document.getElementById("client-line-returnID").innerHTML = textReturnID
+    
 });
 
 //============================send email to client=======================

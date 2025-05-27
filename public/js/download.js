@@ -91,6 +91,7 @@ function search_return_id() {
                 console.log(response)
                 localStorage.setItem('jsonData', JSON.stringify(jsonData));
                 localStorage.setItem('importHistory', JSON.stringify(importHistory));
+                localStorage.setItem('returnID', JSON.stringify(yearInput));
                 window.location.href = "../templete/download.html";
                 return
                 // truyền cả 2
@@ -911,16 +912,20 @@ function renderReturnsTable(data) {
 
     returnList.style.display = 'block';
     tableBody.innerHTML = ''; 
-
+    console.log(data)
     data.forEach((item) => {
         const row = document.createElement('tr');
 
         const lastUpdate = item.LatestImportTime
             ? new Date(item.LatestImportTime).toLocaleString()
             : 'Not Generated';
-        const pbcProgress = item.ImportCount > 0
+
+        var pbcProgress = item.ImportCount > 0
             ? `${item.ImportCount}/${item.TotalEntities}`
             : 'Not Generated';
+        if( item.TotalEntities == 0 && item.ImportCount > 0 ){
+            pbcProgress = `${item.ImportCount} - New Item`
+        }
 
         // const pbcStatus = item.MatchedStatus2Count > 0 ? 'Client - Completed' : 'Not Generated';
         let pbcStatus = 'Not Generated';
