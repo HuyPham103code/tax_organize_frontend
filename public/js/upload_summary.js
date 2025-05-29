@@ -9,6 +9,7 @@ var importHistory = ''
 var TAX_YEAR = ''
 
 document.addEventListener('DOMContentLoaded', function () {
+    
     jsonData = localStorage.getItem('jsonData');
     var importedHistory = ''
     importHistory = localStorage.getItem("importHistory");
@@ -21,8 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (returnHeader) {
             TAX_YEAR = returnHeader.TaxYear
             const general = jsonData.General || {};
-            console.log(general)
-            console.log(general["Primary email address"])
             document.getElementById("primary-email").innerText = general["Primary email address"];
             document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
         }
@@ -30,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
         returnid_element.innerHTML = getReturnID()
     }
     
-
+    
     renderChecklist(jsonData, importedHistory)
     save_attachments()
     // render return id
@@ -223,6 +222,7 @@ function renderChecklist(jsonData, importHistory) {
                 const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
                 const isValidYear = Array.isArray(doc.data)
                     && doc.data.every(d => String(d.tax_year) === String(TAX_YEAR));
+                
 
                 if (isSameType && isSameLink && isValidYear) {
                     console.log("check")
@@ -339,6 +339,11 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
     }
     console.log("✅ Selected items:", results);
     console.log(returnID)
+    console.log(results)
+    if (results.length == 0){
+        showUploadAlertUpload('success', 'Saved successfully.', 'alert-placeholder-send-client');
+        return
+    }
 
     // TODO: gửi results lên server
     fetch(`${API_BASE_URL}/api/cch-import/create-import-from-checklist/`, {
@@ -366,3 +371,62 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
         });
 });
 
+document.getElementById("btn-send-to-client-complete").addEventListener("click", () => {
+    const results = [];
+
+    for (const [key, value] of statusMap.entries()) {
+        results.push({
+            key: key,
+            text: value.text,
+            status: value.status
+        });
+    }
+    const jsonData = localStorage.getItem("jsonData");
+
+    if (jsonData){
+        const data = JSON.parse(jsonData)
+        const returnHeader = data.ReturnHeader || {};
+        var returnID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
+    }
+
+    const checklistItems = document.querySelectorAll("#checklist li");
+
+    console.log("✅ Selected items:", results);
+    console.log(returnID)
+    console.log(results)
+    console.log(checklistItems.length)
+    console.log(results.length)
+    if (results.length == 0){
+        showUploadAlertUpload('success', 'Saved successfully.', 'alert-placeholder-send-client');
+        return
+    } else if (results.length != checklistItems.length) {
+        showUploadAlertUpload('danger', 'Some items are missing.', 'alert-placeholder-send-client');
+        return
+    }
+    // showUploadAlertUpload('success', 'All items selected and saved successfully.', 'alert-placeholder-send-client');
+    // return
+    // TODO: gửi results lên server
+    fetch(`${API_BASE_URL}/api/cch-import/create-import-from-checklist/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            return_id: returnID,
+            checklist: results  // kết quả từ statusMap như bạn đã có
+        })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showUploadAlertUpload('success', 'All items selected and saved successfully.', 'alert-placeholder-send-client');
+            } else {
+
+                showUploadAlertUpload('danger', data.error, 'alert-placeholder-send-client');
+            }
+        })
+        .catch(err => {
+            alert("❌ Error deleting import.");
+            console.error(err);
+        });
+});

@@ -599,7 +599,12 @@
         const attachmentElement = document.getElementById('attachment-count');
         const resultOverview = document.getElementById("result-overview");
         const btnDownload = document.getElementById("btn-download-json");
+        const returnID = params.get("return_id");
 
+        if (returnID) {
+            const newUrl = `/public/docrequest/${encodeURIComponent(returnID)}`;
+            window.history.replaceState(null, "", newUrl);
+        }
         // === Hiển thị file PDF nếu có ===
         if (fileUrl && iframe) {
             iframe.src = fileUrl;
@@ -733,10 +738,21 @@
 
                 summary.addEventListener("click", function (e) {
                     e.preventDefault();
-                    const fileUrl = this.dataset.url;
-                    if (fileUrl) {
-                        window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    // const fileUrl = this.dataset.url;
+                    // if (fileUrl) {
+                    //     window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    // }
+                    const fileUrl = summary.dataset.url;
+                    if (!fileUrl) return;
+                    const returnData = localStorage.getItem('returnID');
+                    if (returnData) {
+                        const textReturnID = JSON.parse(returnData); // Ví dụ: "2024IND:123456:V1"
+                        console.log(textReturnID)
                     }
+                    // window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    const fullUrl = `../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
+                    window.open(fullUrl, "_blank");
+
                 });
 
                 details.appendChild(summary);
@@ -777,6 +793,21 @@
                 console.error("Invalid jsonData in localStorage");
                 return null;
             }
+        }
+
+        try {
+            const returnData = localStorage.getItem('returnID');
+            if (returnData) {
+                const textReturnID = JSON.parse(returnData); // Ví dụ: "2024IND:123456:V1"
+                if (textReturnID) {
+                    const newUrl = `/public/docrequest/${encodeURIComponent(textReturnID)}`;
+                    window.history.replaceState(null, "", newUrl);
+                }
+            } else {
+                console.warn("No returnID in localStorage");
+            }
+        } catch (err) {
+            console.error("Failed to update URL:", err);
         }
     </script>
 

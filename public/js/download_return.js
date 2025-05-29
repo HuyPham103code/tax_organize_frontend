@@ -650,6 +650,9 @@ function renderChecklist(jsonData, importHistory) {
     // Hiển thị thông tin header
     if (jsonData.ReturnHeader) {
         const header = jsonData.ReturnHeader;
+        const general = jsonData.General || {};
+        console.log("Ngo Thi Yen")
+        console.log(general)
         document.getElementById("return-header-section").style.display = "block";
         document.getElementById("tax-year").textContent = header.TaxYear || "(missing)";
         TAX_YEAR = header.TaxYear
@@ -661,6 +664,7 @@ function renderChecklist(jsonData, importHistory) {
             header.OfficeName && header.BusinessUnitName
                 ? `${header.OfficeName}/${header.BusinessUnitName}`
                 : "(missing)";
+        document.getElementById("client-email").textContent = general["Primary email address"] || "None";
     }
 
     const displayFieldMapping = {

@@ -1,167 +1,1109 @@
-var connect_btn = document.getElementById("connect-btn")
-var search_return_btn = document.getElementById("search-return-id")
-import { showUploadAlertUpload } from './utils/alertMessage.js';
-import { toggleVisibility } from './utils/toggleHide.js'
 import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 import { API_BASE_URL } from './utils/config.js'
+import { toggleVisibility } from './utils/toggleHide.js'
+import { getReturnID } from './utils/get_data_header.js'
 
-let totalEntities = 0;
-let CURRENT_RETURN_ID
-var returnID = ''
+var RETURN_ID = ''
+var jsonData = ''
+var importHistory = ''
+var TAX_YEAR = ''
 
-window.addEventListener("DOMContentLoaded", function () {
-    const data = localStorage.getItem('jsonData');
-    const imports = localStorage.getItem('importHistory');
+//=================================show checklist===================================
 
-    if (!data || !imports) {
-        // toggleVisibility("search-list-returns-btn", "hide");
-        return;
+window.addEventListener('DOMContentLoaded', () => {
+    const savedRendered = localStorage.getItem('renderedChecklistData');
+    jsonData = localStorage.getItem('jsonData');
+    var importedHistory = ''
+    importHistory = localStorage.getItem("importHistory");
+    if (importHistory) {
+        importedHistory = JSON.parse(importHistory);
     }
 
-    const jsonData = JSON.parse(data);
-    const importHistory = JSON.parse(imports);
+    var checklistData = null;
 
-    renderChecklist(jsonData, importHistory);
-    renderStatusBox(jsonData, importHistory);
+    const fromSummaryPage = document.referrer.includes("upload_summary.html");
 
-    renderReturnHeader()
+    if (jsonData != "null") {
+        checklistData = JSON.parse(jsonData);
+        console.log("📌 Rendering from checklistData fallback");
+        console.log(checklistData)
+        
+        //======get selecct json
+        generateEntityListFromOCR(checklistData)
+        console.log(globalEntityOptions)
+        // render return id
+        var returnid_element = document.getElementById("client-line-returnID")
+        returnid_element.innerHTML = getReturnID()
 
+        checklistData = checklistData || JSON.parse(jsonData); // nếu chưa parse ở trên
+
+        const filteredChecklistData = Object.fromEntries(
+            Object.entries(checklistData).filter(
+                ([key, value]) => key !== "returnHeader" && value.entities_count > 0
+            )
+        );
+
+        const returnHeader = checklistData.ReturnHeader || {};
+        if (returnHeader) {
+            RETURN_ID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
+            TAX_YEAR = returnHeader.TaxYear
+            document.getElementById('label-tax-year').innerHTML = `Tax year: ${TAX_YEAR}`
+            const general = checklistData.General || {};
+            console.log(general)
+            console.log(general["Primary email address"])
+            document.getElementById("primary-email").innerText = general["Primary email address"];
+            document.getElementById("client-name").innerText = `${general["First name - TP"]} ${general["Last name - TP"]}`;
+
+        }
+    }
+
+    
     var returnData = localStorage.getItem('returnID');
-    returnID = JSON.parse(returnData)
-    console.log(returnID)
+    var textReturnID = JSON.parse(returnData)
+    console.log(textReturnID)
+    document.getElementById("client-line-returnID").innerHTML = textReturnID
+    TAX_YEAR = textReturnID.slice(0,4)
+    RETURN_ID = textReturnID
+    renderChecklist(checklistData, importedHistory);
+
+    if (importedHistory && importedHistory.length) {
+        console.log("check123")
+        importedHistory.forEach(entity => {
+            const result = {
+                recognized_documents: [entity], // mỗi entity là 1 "doc"
+                file_url: entity.pdf_path || ""
+            };
+            appendRecognizedDocsToTable(result);
+        });
+    }
+
+    //Set table display
+    const tableBody = document.getElementById("table-body")
+    if (tableBody.children.length === 0) {
+        console.log("zo")
+        toggleVisibility("table-scroll-container", "hide")
+        toggleVisibility("confirm-btn", "hide")
+    } else {
+        toggleVisibility("table-scroll-container", "show")
+        toggleVisibility("confirm-btn", "show")
+        renderUploadedDocuments(importedHistory)
+    }
+
+
 });
 
 
-//===========================================================
-let searchInterval = null;
 
-function startSearchingEffect(button) {
-    let dots = 0;
-    searchInterval = setInterval(() => {
-        dots = (dots + 1) % 4;  // Quay vòng từ 0 → 3
-        let dotText = '.'.repeat(dots);
-        button.innerText = `Downloading${dotText}`;
-    }, 500);
-}
 
-function stopSearchingEffect(button) {
-    clearInterval(searchInterval);
-    button.innerText = "Download return";
-    searchInterval = null;
-}
+function renderChecklist2(data, importedHistory) {
+    console.log("checklist")
+    const ulThisYear = document.querySelector(".result_checklist1");
+    const ulNewFound = document.querySelector(".result_checklist-new-found1");
+    ulThisYear.innerHTML = '';
+    ulNewFound.innerHTML = '';
 
-//===================================================================
+    // 📌 1. Show Return Header thông tin trước
+    // const header = data.ReturnHeader;
+    // if (header) {
+    //     console.log(1)
+    //     console.log(header)
+    //     const headerBox = document.createElement("div");
+    //     headerBox.className = "return-header-box";  // CSS thêm cho đẹp
 
-// ===test===
+    //     headerBox.innerHTML = `
+    //         <div><strong>Tax Year:</strong> ${header.TaxYear || "(missing)"}</div>
+    //         <div><strong>Return Type:</strong> ${header.ReturnType || "(missing)"}</div>
+    //         <div><strong>Version:</strong> ${header.ReturnVersion || "(missing)"}</div>
+    //         <div><strong>Client ID:</strong> ${header.ClientID || "(missing)"}</div>
+    //         <div><strong>Return Group:</strong> ${header.ReturnGroupName || "(missing)"}</div>
+    //         <div><strong>Office Business Unit:</strong> ${header.OfficeBusinessUnit || "(missing)"}</div>
+    //     `;
 
-function measureTextWidth(text, font = '16px Arial') {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.font = font;
-    return ctx.measureText(text).width;
-}
+    //     // headerBox.innerHTML = `
+    //     //     <div class="return-header-row">
+    //     //         <div class="return-header-item"><strong>Tax Year:</strong> ${header.TaxYear || "(missing)"}</div>
+    //     //         <div class="return-header-item"><strong>Return Type:</strong> ${header.ReturnType || "(missing)"}</div>
+    //     //         <div class="return-header-item"><strong>Version:</strong> ${header.ReturnVersion || "(missing)"}</div>
+    //     //     </div>
+    //     //     <div class="return-header-row">
+    //     //         <div class="return-header-item"><strong>Client ID:</strong> ${header.ClientID || "(missing)"}</div>
+    //     //         <div class="return-header-item"><strong>Return Group:</strong> ${header.ReturnGroupName || "(missing)"}</div>
+    //     //         <div class="return-header-item"><strong>Office Business Unit:</strong> ${header.OfficeBusinessUnit || "(missing)"}</div>
+    //     //     </div>
+    //     // `;
 
-function displayEntities(data) {
-    toggleVisibility("tax-summary-container", "show")
-    const container = document.getElementById('tax-summary-container');
-    container.innerHTML = '';
+    //     ulThisYear.appendChild(headerBox);
+    // }
 
-    Object.entries(data).forEach(([worksheetName, worksheetData]) => {
-        if (!worksheetData.data || !worksheetData.entities_count) return;
+    const displayFieldMapping = {
+        "W-2": ["Employer name", "TS"],
+        "1099-R": ["Payer's name"],
+        "1099-SSA": ["TSJ"],
+        "1099-INT": ["Payer's name"],
+        "1099-DIV": ["Payer's name"],
+        "Consolidated 1099": ["Payer name"],
+        "K-1 1041": ["TSJ", "Name of k-1 entity"],
+        "K-1 1065": ["TSJ", "Partnership's name"],
+        "K-1 1120S": ["TSJ", "Corporation's name"]
+    };
 
-        const section = document.createElement('div');
-        section.innerHTML = `
-        <h3 style="color: #000000;">${worksheetName}</h3>
-        <p style="color: #000000;">
-            Entities Count: ${worksheetData.entities_count}
-            <span class="toggle-icon" style="cursor: pointer;">▼</span>
-        </p>
-        `;
+    const reasons = [
+        "Already reviewed",
+        "N/A-Confirmed with client",
+        "Auto-imported from IRS",
+        "Manually verified",
+        "Not applicable"
+    ];
 
-        const table = document.createElement('table');
-        table.style.borderCollapse = 'collapse';
-        table.style.marginBottom = '20px';
-        table.style.tableLayout = 'fixed';
-        // table.style.margin = '0 auto';
+    const keyFieldMapping = {
+        "W-2": {
+            data: ["Employer name", "Employee social security no"],
+            import: ["Employer_Name", "SocialSecurityNumber"]
+        },
+        "1099-DIV": {
+            data: ["Payer's name"], //"Account number"
+            import: ["Payer_Name"] //"Account_Number"
+        }
+        // Thêm loại form khác nếu cần
+    };
 
-        const headers = new Set();
-        worksheetData.data.forEach(entity => {
-            const general = entity["General primary key"] || entity["General"] || {};
-            Object.keys(general).forEach(key => headers.add(key));
-        });
+    // === 1. Duyệt importedHistory => tạo Set để tra nhanh
+    const importedMap = new Map();
 
-        const headerList = [...headers];
-        const columnWidths = {};
+    const latestImportedByForm = new Map();
 
-        // Tính độ rộng mỗi cột dựa trên nội dung dài nhất
-        headerList.forEach(header => {
-            let maxWidth = measureTextWidth(header);
-            worksheetData.data.forEach(entity => {
-                const general = entity["General primary key"] || entity["General"] || {};
-                const value = general[header] !== undefined ? String(general[header]) : '';
-                const width = measureTextWidth(value);
-                if (width > maxWidth) maxWidth = width;
+    (importedHistory || []).forEach((historyItem) => {
+        const importedForms = historyItem.imported_json_data || [];
+
+        importedForms.forEach(form => {
+            const formType = form.form_type;
+            const mapping = keyFieldMapping[formType];
+            if (!mapping) return;
+
+            const importFields = mapping.import;
+            const status = form.status;
+
+            // ✅ Gộp form theo form_type (nhiều lần import W-2 vẫn gom về 1)
+            if (!latestImportedByForm.has(formType)) {
+                latestImportedByForm.set(formType, {
+                    form_type: formType,
+                    status,
+                    data: [...form.data],
+                });
+            } else {
+                const existing = latestImportedByForm.get(formType);
+                existing.data.push(...form.data);
+            }
+
+            // ✅ Set vào map dùng để so sánh sau
+            form.data.forEach(item => {
+                const key = formType + "|" + importFields.map(f => String(item[f] || "").trim().toLowerCase()).join("|");
+                importedMap.set(key, status);
             });
-            columnWidths[header] = Math.ceil(maxWidth) + 40; // padding: 10 left + 10 right
         });
-
-        // Tổng width
-        const totalWidth = Object.values(columnWidths).reduce((a, b) => a + b, 0);
-        table.style.width = totalWidth + 'px';
-
-        // Header
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        headerList.forEach(header => {
-            const th = document.createElement('th');
-            th.innerText = header;
-            th.style.padding = '10px';
-            th.style.border = '1px solid #ccc';
-            th.style.backgroundColor = '#e0e0e0';  // Màu xám nhạt
-            th.style.color = '#000';
-            th.style.whiteSpace = 'nowrap';
-            th.style.width = columnWidths[header] + 'px';
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Body
-        const tbody = document.createElement('tbody');
-        worksheetData.data.forEach(entity => {
-            const general = entity["General primary key"] || entity["General"] || {};
-            const row = document.createElement('tr');
-            headerList.forEach(header => {
-                const td = document.createElement('td');
-                td.innerText = general[header] || '';
-                td.style.padding = '10px';
-                td.style.border = '1px solid #ccc';
-                td.style.whiteSpace = 'nowrap';
-                td.style.width = columnWidths[header] + 'px';
-                row.appendChild(td);
-            });
-            tbody.appendChild(row);
-        });
-
-        table.appendChild(tbody);
-
-        table.style.display = 'none'; // Ẩn bảng lúc đầu
-
-        const toggleIcon = section.querySelector('.toggle-icon');
-        toggleIcon.addEventListener('click', () => {
-            const isHidden = table.style.display === 'none';
-            table.style.display = isHidden ? 'table' : 'none';
-            toggleIcon.innerText = isHidden ? '▲' : '▼';
-        });
-
-        section.appendChild(table);
-        container.appendChild(section);
     });
+
+    // 👉 Đây là latestImported gộp theo form
+    const latestImported = Array.from(latestImportedByForm.values());
+
+    const currentOCRKeys = new Set();
+    // === 2. Duyệt từng worksheet trong data
+    for (const worksheet in data) {
+        const entities = data[worksheet].data || [];
+        if (entities.length === 0) continue;
+
+        const displayFields = displayFieldMapping[worksheet];
+        const mapping = keyFieldMapping[worksheet];
+
+        entities.forEach(entity => {
+            const pk = entity["General primary key"] || entity["General"] || entity;
+            const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
+            const li = document.createElement("li");
+
+            if (mapping) {
+                const dataKey = mapping.data.map(f => String(pk?.[f] || "").trim().toLowerCase()).join("|");
+                const fullKey = worksheet + "|" + dataKey;
+
+                currentOCRKeys.add(fullKey); // ✅ lưu lại key OCR hiện có
+
+                if (importedMap.has(fullKey)) {
+                    li.innerHTML = `<input type="checkbox" checked> ${worksheet} (${displayText})`;
+                } else {
+                    li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
+                }
+
+                li.setAttribute("data-key", fullKey);
+                ulThisYear.appendChild(li);
+            } else {
+                li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
+                ulThisYear.appendChild(li);
+            }
+        });
+
+    }
+
+    // === 3. Duyệt new found trong import history
+    // === Duyệt imported_history để thêm những new found bị thiếu trong checklist ===
+
+    const displayFieldMappingImport = {
+        "W-2": ["Employer_Name", "SocialSecurityNumber"],
+        "1099-DIV": ["Payer_Name"],
+    };
+    latestImported.forEach(form => {
+        const formType = form.form_type;
+        const status = form.status;
+        const mapping = keyFieldMapping[formType];
+        const displayFields = displayFieldMappingImport[formType];
+
+        if (status !== "new found" || !mapping || !displayFields) return;
+
+        form.data.forEach(item => {
+            const key = formType + "|" + mapping.import.map(f => String(item[f] || "").trim().toLowerCase()).join("|");
+
+            // Nếu chưa được render ở bước trước
+            if (!document.querySelector(`li[data-key="${key}"]`)) {
+                const displayText = displayFields.map(f => item[f] || "(missing)").join(" - ");
+                const li = document.createElement("li");
+                li.innerHTML = `<input type="checkbox" checked> ${formType} (${displayText})`;
+                li.classList.add("new-found");
+                li.setAttribute("data-key", key); // đánh dấu để không bị trùng lần nữa
+                ulNewFound.appendChild(li);
+            }
+        });
+    });
+
+    //  Show new found
+    const labelNewFound = document.querySelector(".new-found-label1");
+
+    if (ulNewFound.children.length > 0) {
+        labelNewFound.style.display = "block";
+    } else {
+        labelNewFound.style.display = "none";
+    }
 }
 
-// 14/04
-// ===test===
+
+function renderChecklist(jsonData, importHistory) {
+    if (!jsonData) {
+        console.log("do")
+        renderNewItem(importHistory)
+        return
+    }
+    console.log("start render on the right");
+    const ulThisYear = document.querySelector(".result_checklist1");
+    const ulNewFound = document.querySelector(".result_checklist-new-found1");
+    ulThisYear.innerHTML = '';
+    ulNewFound.innerHTML = '';
+
+    const displayFieldMapping = {
+        "W-2": ["Employer name", "TS"],
+        "1099-R": ["Payer's name"],
+        "1099-SSA": ["TSJ"],
+        "1099-INT": ["Payer's name"],
+        "1099-DIV": ["Payer's name"],
+        "Consolidated 1099": ["Payer name"],
+        "K-1 1041": ["TSJ", "Name of k-1 entity"],
+        "K-1 1065": ["TSJ", "Partnership's name"],
+        "K-1 1120S": ["TSJ", "Corporation's name"]
+    };
+
+    const linkFieldMapping = {
+        "W-2": "Employer_Name",
+        "1099-DIV": "Payer_Name"
+    };
+
+    let year = '';
+    const returnHeader = jsonData.ReturnHeader || {};
+    if (returnHeader) {
+        year = returnHeader.TaxYear;
+    }
+    console.log("check123")
+    console.log(year)
+
+    // === 1. Duyệt JSON OCR để render checklist chính ===
+    for (const worksheet in jsonData) {
+        const entities = jsonData[worksheet]?.data || [];
+        const displayFields = displayFieldMapping[worksheet] || [];
+
+        entities.forEach(entity => {
+            const pk = entity["General primary key"] || entity["General"] || entity;
+            const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
+            const fullKey = worksheet + " - " + displayText;
+
+            let isChecked = false;
+
+            // ✅ So sánh trực tiếp với từng entity trong importHistory (flat)
+            importHistory.forEach(doc => {
+                const isSameType = doc.form_type === worksheet;
+                const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
+                const isThisYear = Array.isArray(doc.data)
+                    && doc.data.every(d => String(d.tax_year) === String(year));                
+
+                if (isSameType && isSameLink && (isThisYear || doc.status == '4' || doc.status == '5')) {
+                    isChecked = true;
+                }
+            });
+
+            const li = document.createElement("li");
+            li.innerHTML = `<input type="checkbox" ${isChecked ? "checked" : ""}> ${worksheet} (${displayText})`;
+            li.setAttribute("data-key", fullKey);
+            ulThisYear.appendChild(li);
+        });
+    }
+
+    // === 2. Duyệt importHistory để tìm các entity "mới được OCR", chưa có trong JSON ===
+    importHistory.forEach(entity => {
+        const { form_type, link, data, status } = entity;
+        const matchField = linkFieldMapping[form_type];
+
+        const isThisYear = Array.isArray(data) && data.every(d => String(d.tax_year) === String(year));
+
+        if (!isThisYear || !Array.isArray(data) || !matchField) return;
+
+        const isNew = !link || link === "New Item";
+        const entityData = data[0] || {};
+        const displayText = (entityData[matchField] || "(missing)").toString();
+        const fullKey = form_type + " - " + displayText;
+
+        // ✅ Nếu là "New Item" và chưa có ở danh sách chính thì thêm vào New Found
+        const alreadyRendered = !!ulThisYear.querySelector(`li[data-key="${fullKey}"]`);
+        if (isNew && !alreadyRendered) {
+            const li = document.createElement("li");
+            li.innerHTML = `<input type="checkbox" checked> ${form_type} (${displayText})`;
+            li.classList.add("new-found");
+            li.setAttribute("data-key", fullKey);
+            ulNewFound.appendChild(li);
+        }
+    });
+
+    const labelNewFound = document.querySelector(".new-found-label1");
+    labelNewFound.style.display = ulNewFound.children.length > 0 ? "block" : "none";
+
+    console.log("end render 123");
+}
+
+function renderNewItem(importHistory){
+
+    if(importHistory == [] || !importHistory) return
+
+    const linkFieldMapping = {
+        "W-2": "Employer_Name",
+        "1099-DIV": "Payer_Name"
+    };
+
+    const ulNewFound = document.querySelector(".result_checklist-new-found1");
+    ulNewFound.innerHTML = '';
+
+    importHistory.forEach(entity => {
+        const { form_type, link, data, status } = entity;
+        const matchField = linkFieldMapping[form_type];
+
+        const isThisYear = Array.isArray(data) && data.every(d => String(d.tax_year) === String(TAX_YEAR));
+        
+        if (!isThisYear || !Array.isArray(data) || !matchField) return;
+
+        const isNew = true //!link || link === "New Item";
+        const entityData = data[0] || {};
+        const displayText = (entityData[matchField] || "(missing)").toString();
+        const fullKey = form_type + " - " + displayText;
+
+        // ✅ Nếu là "New Item" và chưa có ở danh sách chính thì thêm vào New Found
+        // const alreadyRendered = !!ulThisYear.querySelector(`li[data-key="${fullKey}"]`);
+        if (isNew) {
+            const li = document.createElement("li");
+            li.innerHTML = `<input type="checkbox" checked> ${form_type} (${displayText})`;
+            li.classList.add("new-found");
+            li.setAttribute("data-key", fullKey);
+            ulNewFound.appendChild(li);
+        }
+    });
+
+    const labelNewFound = document.querySelector(".new-found-label1");
+    labelNewFound.style.display = ulNewFound.children.length > 0 ? "block" : "none";
+}
+
+
+
+//==============================upload file==================================
+const uploadBox = document.getElementById('uploadBox');
+const fileInput = document.getElementById('fileInput');
+const uploadText = document.getElementById('uploadText');
+
+// // Cho phép click vùng box để chọn file
+// uploadBox.addEventListener('click', () => {
+//     fileInput.click();
+// });
+
+// // Hiển thị file khi drag & drop
+// uploadBox.addEventListener('dragover', (e) => {
+//     e.preventDefault();
+//     uploadBox.style.backgroundColor = '#e5e7eb';
+// });
+
+// uploadBox.addEventListener('dragleave', () => {
+//     uploadBox.style.backgroundColor = '';
+// });
+
+// uploadBox.addEventListener('drop', (e) => {
+//     e.preventDefault();
+//     uploadBox.style.backgroundColor = '';
+//     const file = e.dataTransfer.files[0];
+//     if (file) {
+//         uploadText.innerHTML = `📄 ${file.name}`;
+//     }
+// });
+
+// // Hiển thị file khi chọn từ file input
+// fileInput.addEventListener('change', (e) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//         uploadText.innerHTML = `📄 ${file.name}`;
+//     }
+// });
+
+
+
+//=======================OCR pdf file==========================
+// const uplaod_btn = document.getElementById("note-button")
+
+const checklistOverlay = document.getElementById("checklistOverlay");
+const uploadBtn = document.getElementById("uploadBtn");
+const closeOverlay = document.getElementById("closeOverlay");
+const checklistContainer = document.querySelector(".result_checklist");
+
+//==============================================================
+uploadBtn.addEventListener("click", async () => {
+    const result = await uploadAndAnalyzeFile();
+    // const result = get_data()
+    if (result) {
+        console.log("link")
+        console.log(result)
+        console.log("link")
+        // Save to localStorage
+        localStorage.setItem('upload_result', JSON.stringify(result));
+    }
+    console.log(1)
+
+    // const recognizedDocs = result.recognized_documents;
+
+    // const saved = localStorage.getItem('checklistData');
+
+    // if (saved) {
+    //     const checklistData = JSON.parse(saved);
+    //     compareAndRenderChecklist(checklistData, recognizedDocs)
+    // }
+
+    // document.getElementById('download-excel-btn').style.display = 'block'
+
+});
+
+//====================================================
+
+function flattenChecklistData(localData) {
+    const flattened = [];
+
+    for (const type in localData) {
+        const entries = localData[type]?.data || [];
+        for (const entry of entries) {
+            const primaryKey = entry["General primary key"];
+            if (!primaryKey) continue;
+
+            flattened.push({
+                type,
+                ...primaryKey
+            });
+        }
+    }
+
+    return flattened;
+}
+
+function categorizeForms(flatChecklist, recognizedDocs) {
+    const thisYearForms = [];
+    const newForms = [];
+    const missingForms = [];
+
+    const matchedKeys = new Set();
+
+    function buildKey(type, name, ssn) {
+        return `${type.toUpperCase()}||${name?.trim()}||${ssn?.trim()}`;
+    }
+    console.log("check1")
+    console.log(flatChecklist)
+    // ✅ B1: map từ recognizedDocs → tìm trong checklist
+    recognizedDocs.forEach(doc => {
+        const key = buildKey(doc.type, doc.name, doc.SSN);
+        // const matched = flatChecklist.some(item =>
+        //     item.type.toUpperCase() === doc.type.toUpperCase() &&
+        //     item["Employer name"]?.trim() === doc.name?.trim() &&
+        //     item["Employee social security no"]?.trim() === doc.SSN?.trim()
+        // );
+        const matched = flatChecklist.some(item => {
+            const type = doc.type.toUpperCase();
+            const itemType = item.type.toUpperCase();
+
+            if (type === "1099-DIV") {
+                return itemType === "1099-DIV" &&
+                    item["Payer's name"]?.trim() === doc.name?.trim();
+            }
+
+            return itemType === "W-2" &&
+                item["Employer name"]?.trim() === doc.name?.trim() &&
+                item["Employee social security no"]?.trim() === doc.SSN?.trim();
+        });
+
+        if (matched) {
+            thisYearForms.push(doc);
+            matchedKeys.add(key);
+        } else {
+            newForms.push(doc);
+        }
+    });
+
+    // ✅ B2: các item còn lại trong checklist là missing
+    flatChecklist.forEach(item => {
+        const key = buildKey(item.type, item["Employer name"], item["Employee social security no"]);
+        if (!matchedKeys.has(key)) {
+            missingForms.push(item);
+        }
+    });
+
+    return {
+        thisYearForms,
+        newForms,
+        missingForms
+    };
+}
+
+function renderChecklistGroups({ thisYearForms, newForms, missingForms }) {
+    const matchedUL = document.querySelector(".result_checklist1");
+    const unmatchedUL = document.querySelector(".result_checklist-new-found1");
+    const label = document.querySelector(".new-found-label1");
+
+    matchedUL.innerHTML = '';
+    unmatchedUL.innerHTML = '';
+
+
+
+
+    const reasons = [
+        "Already reviewed",
+        "N/A-Confirmed with client",
+        "Auto-imported from IRS",
+        "Manually verified",
+        "Not applicable"
+    ];
+
+    const keyFieldMappingShow = {
+        "W-2": ["Employer name", "TS"],
+        "1099-R": ["Payer's name"],
+        "1099-SSA": ["TSJ"],
+        "1099-INT": ["Payer's name"],
+        "1099-DIV": ["Payer's name"],
+        "Consolidated 1099": ["Payer name"],
+        "K-1 1041": ["TSJ", "Name of k-1 entity"],
+        "K-1 1065": ["TSJ", "Partnership's name"],
+        "K-1 1120S": ["TSJ", "Corporation's name"]
+    };
+
+
+
+
+    function createChecklistItem(docType, displayValue, isChecked = false, defaultReason = "") {
+        const li = document.createElement("li");
+        li.style.marginBottom = "10px";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = isChecked;
+
+        const label = document.createElement("span");
+        label.innerText = ` ${docType} (${displayValue})`;
+
+        const select = document.createElement("select");
+        select.style.marginTop = "5px";
+        select.style.marginLeft = "25px";
+        select.style.display = isChecked ? "inline-block" : "none";
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "-- Select reason --";
+        select.appendChild(defaultOption);
+
+        const reasons = [
+            "Already reviewed",
+            "N/A-Confirmed with client",
+            "Auto-imported from IRS",
+            "Manually verified",
+            "Not applicable"
+        ];
+
+        reasons.forEach(reason => {
+            const option = document.createElement("option");
+            option.value = reason;
+            option.textContent = reason;
+            if (reason === defaultReason) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        checkbox.addEventListener("change", () => {
+            select.style.display = checkbox.checked ? "inline-block" : "none";
+        });
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        li.appendChild(document.createElement("br"));
+        li.appendChild(select);
+
+        return li;
+    }
+
+
+    function buildDisplayString(type, source, mapping) {
+        const fields = mapping[type] || [];
+        return fields.map(field => {
+            // Các alias cho "name" của form
+            if (field === "Employer name") return source["Employer name"] || source.name || "(missing)";
+            if (field === "Payer's name") return source["Payer's name"] || source.name || "(missing)";
+            if (field === "Payer name") return source["Payer name"] || source.name || "(missing)";
+            if (field === "Name of k-1 entity") return source["Name of k-1 entity"] || source.name || "(missing)";
+            if (field === "Corporation's name") return source["Corporation's name"] || source.name || "(missing)";
+            if (field === "Partnership's name") return source["Partnership's name"] || source.name || "(missing)";
+
+            // Các alias cho TS
+            if (field === "TS") return source["TS"] || source["TSJ"] || "(missing)";
+            if (field === "TSJ") return source["TSJ"] || source["TS"] || "(missing)";
+
+            return source[field] || "(missing)";
+        }).join(" - ");
+    }
+
+    // 🟡 New Found
+    newForms.forEach(doc => {
+        const display = buildDisplayString(doc.type.toUpperCase(), doc, keyFieldMappingShow);
+        unmatchedUL.appendChild(createChecklistItem(doc.type.toUpperCase(), display));
+    });
+
+    // 🟢 This Year
+    thisYearForms.forEach(doc => {
+        const display = buildDisplayString(doc.type.toUpperCase(), doc, keyFieldMappingShow);
+        matchedUL.appendChild(createChecklistItem(doc.type.toUpperCase(), display, true, "Already reviewed"));
+    });
+
+    // 🔴 Missing
+    missingForms.forEach(item => {
+        const display = buildDisplayString(item.type.toUpperCase(), item, keyFieldMappingShow);
+        matchedUL.appendChild(createChecklistItem(item.type.toUpperCase(), display, false));
+    });
+
+    // ✅ Toggle new found label
+    label.style.display = newForms.length > 0 ? 'block' : 'none';
+}
+
+
+
+
+
+function compareAndRenderChecklist(localData, recognizedDocs) {
+    const matchedUL = document.querySelector(".result_checklist1");
+    const unmatchedUL = document.querySelector(".result_checklist-new-found1");
+    const label = document.querySelector(".new-found-label1");
+
+    const keyFieldMappingShow = {
+        "W-2": ["Employer name", "TS"],
+        "1099-R": ["Payer's name"],
+        "1099-SSA": ["TSJ"],
+        "1099-INT": ["Payer's name"],
+        "1099-DIV": ["Payer's name"],
+        "Consolidated 1099": ["Payer name"],
+        "K-1 1041": ["TSJ", "Name of k-1 entity"],
+        "K-1 1065": ["TSJ", "Partnership's name"],
+        "K-1 1120S": ["TSJ", "Corporation's name"]
+    };
+
+    const reasons = [
+        "Already reviewed",
+        "N/A-Confirmed with client",
+        "Auto-imported from IRS",
+        "Manually verified",
+        "Not applicable"
+    ];
+
+    const recognizedSet = new Set();
+    const existingItems = new Set();
+
+    const flatChecklist = flattenChecklistData(localData);
+    console.log(flatChecklist)
+    const categorized = categorizeForms(flatChecklist, recognizedDocs);
+    console.log(categorized)
+    renderChecklistGroups(categorized);
+
+    localStorage.setItem('renderedChecklistData', JSON.stringify(categorized));
+    //return
+
+}
+
+
+
+
+//==================================================================
+//async 
+async function uploadAndAnalyzeFile() {
+    showLoading()
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+    var returnid = document.getElementById('client-line-returnID').innerText
+    console.log(returnid)
+
+    if (!file) {
+        alert("Please choose a pdf file to upload");
+        hideLoading()
+        return null;
+    }
+
+    uploadBtn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("return_id", returnid);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/cch-import/upload-ocr-pdf/`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+        // const result = get_data()
+        if (!result.success)
+            return
+
+        // 1. Lấy dữ liệu cũ từ localStorage
+        const oldHistoryStr = localStorage.getItem("importHistory");
+        const oldHistory = JSON.parse(oldHistoryStr) || [];
+
+        console.log("checked")
+        console.log(result)
+        console.log(oldHistory)
+        // 3. Lấy bản ghi hiện tại đang được hiển thị (thường là phần tử đầu tiên)
+
+        function appendImportToHistory(importedHistory, ocrResponse) {
+            const recognizedDocuments = ocrResponse.recognized_documents || [];
+            if (recognizedDocuments.length === 0) return importedHistory;
+
+            const newEntities = recognizedDocuments.map(doc => ({
+                form_type: doc.form_type,
+                page_number: doc.page_number,
+                data: doc.data,
+                status: doc.status || "2",
+                link: doc.link || "",
+                imported_at: new Date().toISOString(),
+                is_imported_to_cch: false,
+                cch_import_status: "pending",
+                imported_to_cch_at: null,
+                pdf_path: ocrResponse.file_url || "",
+                id: doc.id || null, // 👈 Nếu bạn muốn chờ backend trả về ID thì để null
+            }));
+
+            return [...newEntities, ...importedHistory]; // prepend vào đầu
+        }
+
+        //  need check
+        const updatedHistory = appendImportToHistory(oldHistory, result);
+        localStorage.setItem('importHistory', JSON.stringify(updatedHistory));
+
+        console.log(11111)
+        console.log(result)
+        //  show table
+        appendRecognizedDocsToTable(result)
+
+
+        return result;
+
+    } catch (error) {
+
+        console.error("Upload failed:", error);
+        alert("An error occurred while uploading the file.");
+        return null;
+
+    } finally {
+        uploadBtn.disabled = false;
+        document.body.style.cursor = 'default';
+        hideLoading()
+        toggleVisibility("table-scroll-container", "show")
+        toggleVisibility("confirm-btn", "show")
+    }
+}
+
+function displayChecklist(result) {
+    if (!(result.success && Array.isArray(result.recognized_documents))) {
+        alert("No data available to display the checklist.");
+        return;
+    }
+
+    const checklistContainer = document.querySelector(".result_checklist");
+    checklistContainer.innerHTML = ""; // clear cũ
+
+    const ul = document.createElement("ul");
+    ul.classList.add("checklist-list");
+
+    const localChecklist = JSON.parse(localStorage.getItem("checklistData") || "{}");
+    const keyFieldMapping = {
+        "W-2": "Employer name",
+        "1099-R": "Payer's name",
+        "1099-SSA": "TSJ",
+        "1099-INT": "Payer's name",
+        "1099-DIV": "Payer's name",
+        "Consolidated 1099": "Payer name",
+        "K-1 1041": "TSJ",
+        "K-1 1065": "TSJ",
+        "K-1 1120S": "TSJ"
+    };
+
+    const newItems = [];
+    const existingItems = [];
+
+    result.recognized_documents.forEach(item => {
+        const name = item.name?.trim();
+        if (!name) return;
+
+        const keyField = keyFieldMapping[item.type];
+        const knownEntities = (localChecklist[item.type]?.data || []).map(e => {
+            return e["General primary key"]?.[keyField];
+        });
+
+        const isNew = !knownEntities.includes(name);
+
+        const li = document.createElement("li");
+        li.className = "checklist-item";
+        // li.innerHTML = `<input type="checkbox" ${isNew ? "" : "checked"} disabled> ${item.type} (${item.name})`;
+        li.innerHTML = `<input type="checkbox" ${isNew ? "disabled" : "checked"}> ${item.type} (${item.name})`;
+
+        if (isNew) {
+            newItems.push(li);
+        } else {
+            existingItems.push(li);
+        }
+    });
+
+    if (newItems.length > 0) {
+        const title = document.createElement("li");
+        title.className = "checklist-title";
+        title.innerText = "🆕 New Entity Found:";
+        ul.appendChild(title);
+        newItems.forEach(item => ul.appendChild(item));
+    }
+
+    existingItems.forEach(item => ul.appendChild(item));
+    checklistContainer.appendChild(ul);
+
+    const checklistOverlay = document.getElementById("checklistOverlay");
+    checklistOverlay.classList.remove("hidden");
+
+    // const downloadBtn = document.querySelector(".download-excel");
+    // if (downloadBtn && result.file_url) {
+    //     downloadBtn.href = result.file_url;
+    //     downloadBtn.classList.remove("hidden");
+    // }
+
+    // ✅ Đặt link download tại đây — vì lúc này đã có `result.file_url`
+    const downloadLink = document.querySelector(".download-excel");
+    if (downloadLink) {
+        if (result.file_url) {
+            downloadLink.href = result.file_url;
+            downloadLink.setAttribute("download", result.file_url.split("/").pop());
+            downloadLink.classList.remove("hidden");
+        } else {
+            downloadLink.classList.add("hidden");
+        }
+    }
+}
+
+//===============================================================
+closeOverlay.addEventListener("click", () => {
+    checklistOverlay.classList.add("hidden");
+});
+
+
+
+
 function get_data() {
+    return {
+        "success": true,
+        "file_url": "http://127.0.0.1:8000/mediafiles/generate_excel_to_import/file1%202024_05-13-2025%2018-43-20.pdf",
+        "recognized_documents": [
+            {
+                "page_number": 100,
+                "form_type": "W-2",
+                "data": [
+                    {
+                        "type": "w2",
+                        "tax_year": "2024",
+                        "document_number": 1,
+                        "SocialSecurityNumber": "987-65-4321",
+                        "TS": "T",
+                        "Employer_IdNumber": "12-3456789",
+                        "Employer_Name": "APPLE INC.",
+                        "Employer_Address_StreetAddress": "1234 EMPIRE AVENUE",
+                        "Employer_Address_City": "BURBANK",
+                        "Employer_Address_State": "CA",
+                        "Employer_Address_PostalCode": "91504",
+                        "ControlNumber": "",
+                        "WagesTipsAndOtherCompensation": 39928.93,
+                        "FederalIncomeTaxWithheld": 9882.68,
+                        "SocialSecurityWages": 39928.93,
+                        "SocialSecurityTaxWithheld": 2475.59,
+                        "MedicareWagesAndTips": 39928.93,
+                        "MedicareTaxWithheld": 578.97,
+                        "SocialSecurityTips": "",
+                        "AllocatedTips": "",
+                        "DependentCareBenefits": "",
+                        "NonQualifiedPlans": "",
+                        "IsStatutoryEmployee": "false",
+                        "IsRetirementPlan": "true",
+                        "IsThirdPartySickPay": "false",
+                        "StateTaxInfos": [
+                            {
+                                "State": "NY",
+                                "StateWagesTipsEtc": 39928.93,
+                                "StateIncomeTax": 2728.48
+                            },
+                            {
+                                "State": "",
+                                "StateWagesTipsEtc": "",
+                                "StateIncomeTax": ""
+                            }
+                        ],
+                        "LocalTaxInfos": [
+                            {
+                                "LocalWagesTipsEtc": 39928.93,
+                                "LocalIncomeTax": 1605.87
+                            },
+                            {
+                                "LocalWagesTipsEtc": "",
+                                "LocalIncomeTax": ""
+                            }
+                        ]
+                    }
+                ],
+                "link": "",
+                "status": ""
+            }
+        ]
+    }
+}
+
+
+
+//=============================handle view detail JSON==============================
+
+
+//  Display json
+
+// function displayJsonOverlay(data) {
+//     const jsonBox = document.getElementById("result-overview");
+
+//     // Chuyển JSON thành HTML dạng tree
+//     jsonBox.innerHTML = generateJsonTree(data);
+
+//     // Bắt sự kiện toggle sau khi đã render
+//     jsonBox.querySelectorAll(".json-toggle").forEach(toggle => {
+//         toggle.addEventListener("click", function () {
+//             const content = this.nextElementSibling;
+//             if (content) {
+//                 const isCollapsed = content.classList.contains("json-collapsed");
+//                 content.classList.toggle("json-collapsed", !isCollapsed);
+//                 this.textContent = isCollapsed ? "[-] " : "[+] ";
+//             }
+//         });
+//     });
+
+//     const btnDownload = document.getElementById("btn-download-json");
+//     btnDownload.onclick = () => {
+//         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+//         const url = URL.createObjectURL(blob);
+
+//         const a = document.createElement("a");
+//         a.href = url;
+//         a.download = "tax_data.json";
+//         a.click();
+
+//         URL.revokeObjectURL(url);
+//     };
+// }
+
+
+// 🟢 Chuyển JSON thành HTML tree có thể expand/collapse
+function generateJsonTree(json, isRoot = true) {
+    if (typeof json !== "object" || json === null) {
+        return `<span class="json-value">${JSON.stringify(json)}</span>`;
+    }
+
+    const isArray = Array.isArray(json);
+    let html = `<div class="json-container">`;
+
+    if (!isRoot) { //onclick="toggleJsonTree(this)"
+        html += `<span class="json-toggle" >[+] </span>`;
+        html += `<div class="json-content json-collapsed">`;
+    }
+
+    html += isArray ? "[" : "{";
+    html += `<ul class="json-list">`;
+
+    for (const key in json) {
+        const value = json[key];
+        const isObject = typeof value === "object" && value !== null;
+        const keyLabel = isArray
+            ? ""
+            : `<span class="json-key">"${key}"</span>: `;
+
+        html += `<li>${keyLabel}`;
+
+        if (isObject) {
+            html += generateJsonTree(value, false);
+        } else {
+            html += `<span class="json-value">${JSON.stringify(value)}</span>`;
+        }
+
+        html += `,</li>`;
+    }
+
+    html += `</ul>${isArray ? "]" : "}"}`;
+
+    if (!isRoot) {
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    return html;
+}
+
+document.querySelectorAll(".json-toggle").forEach(toggle => {
+    toggle.addEventListener("click", function () {
+        const content = this.nextElementSibling;
+        if (content) {
+            const isCollapsed = content.classList.contains("json-collapsed");
+            content.classList.toggle("json-collapsed", !isCollapsed);
+            this.textContent = isCollapsed ? "[-] " : "[+] ";
+        }
+    });
+});
+
+// 🟢 Xử lý sự kiện click để thu gọn/mở rộng JSON tree
+function toggleJsonTree(element) {
+    const content = element.nextElementSibling;
+    if (content) {
+        const isCollapsed = content.classList.contains("json-collapsed");
+        content.classList.toggle("json-collapsed", !isCollapsed);
+        element.textContent = isCollapsed ? "[-] " : "[+] ";
+    }
+}
+
+
+function get_JSON() {
     console.log(1)
     return {
         "1099-SSA": {
@@ -455,424 +1397,72 @@ function get_data() {
     }
 }
 
-// function renderChecklist(data, importedHistory) {
-//     toggleVisibility("tax-summary-container", "show");
-
-//     if (data.ReturnHeader) {
-//         const header = data.ReturnHeader;
-//         document.getElementById("return-header-section").style.display = "block";
-//         document.getElementById("tax-year").textContent = header.TaxYear || "(missing)";
-//         document.getElementById("return-type").textContent = header.ReturnType || "(missing)";
-//         document.getElementById("version").textContent = header.ReturnVersion || "(missing)";
-//         document.getElementById("client-id").textContent = header.ClientID || "(missing)";
-//         document.getElementById("return-group").textContent = header.ReturnGroupName || "(missing)";
-//         document.getElementById("office-business-unit").textContent =
-//             header.OfficeName && header.BusinessUnitName
-//                 ? `${header.OfficeName}/${header.BusinessUnitName}`
-//                 : "(missing)";
-//     }
-
-//     const ulThisYear = document.getElementById("checklist-this-year");
-//     const ulNewFound = document.getElementById("checklist-new-found");
-//     ulThisYear.innerHTML = '';
-//     ulNewFound.innerHTML = '';
-
-//     const displayFieldMapping = {
-//         "W-2": ["Employer name", "TS"],
-//         "1099-R": ["Payer's name"],
-//         "1099-SSA": ["TSJ"],
-//         "1099-INT": ["Payer's name"],
-//         "1099-DIV": ["Payer's name"],
-//         "Consolidated 1099": ["Payer name"],
-//         "K-1 1041": ["TSJ", "Name of k-1 entity"],
-//         "K-1 1065": ["TSJ", "Partnership's name"],
-//         "K-1 1120S": ["TSJ", "Corporation's name"]
-//     };
-
-//     const keyFieldMapping = {
-//         "W-2": {
-//             data: ["Employer name", "Employee social security no"],
-//             import: ["Employer_Name", "SocialSecurityNumber"]
-//         },
-//         "1099-DIV": {
-//             data: ["Payer's name" ], //"Account number"
-//             import: ["Payer_Name" ] //"Account_Number"
-//         }
-//         // Thêm loại form khác nếu cần
-//     };
-
-//     // === 1. Duyệt importedHistory => tạo Set để tra nhanh
-//     const importedMap = new Map();
-
-//     const latestImportedByForm = new Map(); 
-
-//     (importedHistory || []).forEach((historyItem) => {
-//         const importedForms = historyItem.imported_json_data || [];
-
-//         importedForms.forEach(form => {
-//             const formType = form.form_type;
-//             const mapping = keyFieldMapping[formType];
-//             if (!mapping) return;
-
-//             const importFields = mapping.import;
-//             const status = form.status;
-
-//             // ✅ Gộp form theo form_type (nhiều lần import W-2 vẫn gom về 1)
-//             if (!latestImportedByForm.has(formType)) {
-//                 latestImportedByForm.set(formType, {
-//                     form_type: formType,
-//                     status,
-//                     data: [...form.data],
-//                 });
-//             } else {
-//                 const existing = latestImportedByForm.get(formType);
-//                 existing.data.push(...form.data);
-//             }
-
-//             // ✅ Set vào map dùng để so sánh sau
-//             form.data.forEach(item => {
-//                 const key = formType + "|" + importFields.map(f => String(item[f] || "").trim().toLowerCase()).join("|");
-//                 importedMap.set(key, status);
-//             });
-//         });
-//     });
-
-//     // 👉 Đây là latestImported gộp theo form
-//     const latestImported = Array.from(latestImportedByForm.values());
-
-//     const currentOCRKeys = new Set();
-//     // === 2. Duyệt từng worksheet trong data
-//     for (const worksheet in data) {
-//         const entities = data[worksheet].data || [];
-//         if (entities.length === 0) continue;
-
-//         const displayFields = displayFieldMapping[worksheet];
-//         const mapping = keyFieldMapping[worksheet];
-
-//         entities.forEach(entity => {
-//             const pk = entity["General primary key"] || entity["General"] || entity;
-//             const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
-//             const li = document.createElement("li");
-
-//             if (mapping) {
-//                 const dataKey = mapping.data.map(f => String(pk?.[f] || "").trim().toLowerCase()).join("|");
-//                 const fullKey = worksheet + "|" + dataKey;
-
-//                 currentOCRKeys.add(fullKey); // ✅ lưu lại key OCR hiện có
-
-//                 if (importedMap.has(fullKey)) {
-//                     li.innerHTML = `<input type="checkbox" checked> ${worksheet} (${displayText})`;
-//                 } else {
-//                     li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
-//                 }
-
-//                 li.setAttribute("data-key", fullKey);
-//                 ulThisYear.appendChild(li);
-//             } else {
-//                 li.innerHTML = `<input type="checkbox"> ${worksheet} (${displayText})`;
-//                 ulThisYear.appendChild(li);
-//             }
-//         });
-
-//     }
-
-//     // === 3. Duyệt new found trong import history
-//     // === Duyệt imported_history để thêm những new found bị thiếu trong checklist ===
-
-//     const displayFieldMappingImport = {
-//         "W-2": ["Employer_Name", "SocialSecurityNumber"],
-//         "1099-DIV": ["Payer_Name"],
-//     };
-//     latestImported.forEach(form => {
-//         const formType = form.form_type;
-//         const status = form.status;
-//         const mapping = keyFieldMapping[formType];
-//         const displayFields = displayFieldMappingImport[formType];
-
-//         if (status !== "new found" || !mapping || !displayFields) return;
-
-//         form.data.forEach(item => {
-//             const key = formType + "|" + mapping.import.map(f => String(item[f] || "").trim().toLowerCase()).join("|");
-
-//             // Nếu chưa được render ở bước trước
-//             if (!document.querySelector(`li[data-key="${key}"]`)) {
-//                 const displayText = displayFields.map(f => item[f] || "(missing)").join(" - ");
-//                 const li = document.createElement("li");
-//                 li.innerHTML = `<input type="checkbox" checked> ${formType} (${displayText})`;
-//                 li.classList.add("new-found");
-//                 li.setAttribute("data-key", key); // đánh dấu để không bị trùng lần nữa
-//                 ulNewFound.appendChild(li);
-//             }
-//         });
-//     });
-
-// }
 
 
-// const latestImported = importedHistory?.[0]?.imported_json_data || [];
+document.getElementById('btn-selected-checklist').addEventListener('click', function (e) {
+    e.preventDefault();
 
-// latestImported.forEach(form => {
-//     const formType = form.form_type;
-//     const mapping = keyFieldMapping[formType];
-//     if (!mapping) return;
+    const allCheckboxes = document.querySelectorAll('.checklist input[type="checkbox"]');
 
-//     const importFields = mapping.import;
-//     const status = form.status;
+    const nonable = [];
+    const newFound = [];
+    const missing = [];
 
-//     form.data.forEach(item => {
-//         const key = formType + "|" + importFields.map(f => String(item[f] || "").trim().toLowerCase()).join("|");
-//         importedMap.set(key, status);
-//     });
-// });
+    allCheckboxes.forEach(checkbox => {
+        const li = checkbox.closest('li');
+        if (!li) return;
 
-function renderReturnHeader(){
-    var returnData = localStorage.getItem('returnID');
-    var textReturnID = JSON.parse(returnData)
-    console.log(textReturnID)
-    const parts = textReturnID.split(':');
-    document.getElementById("return-header-section").style.display = "block";
-    document.getElementById("tax-year").textContent = textReturnID.slice(0,4) || "(missing)";
-    document.getElementById("return-type").textContent = textReturnID.slice(4,5) || "(missing)";
-    document.getElementById("version").textContent = parts[2] || "(missing)";
-    document.getElementById("client-id").textContent = parts[1] || "(missing)";
-}
+        const span = li.querySelector('span');
+        if (!span) return;
 
-function renderChecklist(jsonData, importHistory) {
-    toggleVisibility("tax-summary-container", "show");
+        const text = span.textContent.trim();  // Ví dụ: "W-2 (S Corp 1)"
+        const match = text.match(/^(.+?)\s+\((.+?)\)$/);
+        if (!match) return;
 
-    if(jsonData == {} || jsonData == '' || !jsonData ) 
-    {
-        renderNewItem(importHistory)
-        return
-    }
-    var TAX_YEAR = ''
+        const form = match[1].trim();
+        const entity_name = match[2].trim();
 
-    // Hiển thị thông tin header
-    if (jsonData.ReturnHeader) {
-        const header = jsonData.ReturnHeader;
-        document.getElementById("return-header-section").style.display = "block";
-        document.getElementById("tax-year").textContent = header.TaxYear || "(missing)";
-        TAX_YEAR = header.TaxYear
-        document.getElementById("return-type").textContent = header.ReturnType || "(missing)";
-        document.getElementById("version").textContent = header.ReturnVersion || "(missing)";
-        document.getElementById("client-id").textContent = header.ClientID || "(missing)";
-        document.getElementById("return-group").textContent = header.ReturnGroupName || "(missing)";
-        document.getElementById("office-business-unit").textContent =
-            header.OfficeName && header.BusinessUnitName
-                ? `${header.OfficeName}/${header.BusinessUnitName}`
-                : "(missing)";
-    }
+        const isNewFound = li.closest('.result_checklist-new-found1') !== null;
+        const reason = li.querySelector('select')?.value || '';
 
-    const displayFieldMapping = {
-        "W-2": ["Employer name", "TS"],
-        "1099-R": ["Payer's name"],
-        "1099-SSA": ["TSJ"],
-        "1099-INT": ["Payer's name"],
-        "1099-DIV": ["Payer's name"],
-        "Consolidated 1099": ["Payer name"],
-        "K-1 1041": ["TSJ", "Name of k-1 entity"],
-        "K-1 1065": ["TSJ", "Partnership's name"],
-        "K-1 1120S": ["TSJ", "Corporation's name"]
-    };
-
-    const linkFieldMapping = {
-        "W-2": "Employer_Name",
-        "1099-DIV": "Payer_Name"
-    };
-
-    const importedMap = new Map();
-    const latestImportedByForm = new Map();
-
-    const latestImported = Array.from(latestImportedByForm.values());
-    const currentOCRKeys = new Set();
-
-    const checkedRows = [];
-    const uncheckedRows = [];
-
-    const tableBody = document.getElementById("document-table-body");
-    tableBody.innerHTML = '';
-
-    let key = "0";
-    let status = "2";
-
-    for (const worksheet in jsonData) {
-        const entities = jsonData[worksheet]?.data || [];
-        const displayFields = displayFieldMapping[worksheet] || [];
-
-        entities.forEach(entity => {
-            const pk = entity["General primary key"] || entity["General"] || entity;
-            const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
-            const fullKey = worksheet + " - " + displayText;
-
-            let isChecked = false;
-            let tableRow = null;
-            let cch_status = false
-            let time_stamp = ''
-            let cch_import_status = false
-
-            // ✅ So sánh trực tiếp với từng entity trong importHistory
-            importHistory.forEach(doc => {
-                const hasValidYear = Array.isArray(doc.data)
-                    && doc.data.every(item => item.tax_year == TAX_YEAR);
-
-                if (
-                    (doc.form_type === worksheet &&
-                        doc.link === fullKey)
-                    || doc.data == ''
-                ) {
-                    isChecked = true;
-                    key = doc.id || "0";  // nếu không có id, gán tạm "0"
-                    status = doc.status || "2";
-                    cch_status = doc.is_imported_to_cch
-                    time_stamp = doc.imported_to_cch_at
-                    cch_import_status = doc.cch_import_status
-                }
+        if (checkbox.checked) {
+            nonable.push({
+                form,
+                entity_name,
+                status: 'N/A-Confirmed with client',
+                reason
             });
-
-            if (isChecked) {
-                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status, true, '', status);
-                checkedRows.push(tableRow);
+        } else {
+            if (isNewFound) {
+                newFound.push({
+                    form,
+                    entity_name,
+                    status: 'New this year'
+                });
             } else {
-                tableRow = createTableRow(worksheet, displayText, key, cch_status, time_stamp, cch_import_status, false, '');
-                uncheckedRows.push(tableRow);
+                missing.push({
+                    form,
+                    entity_name,
+                    status: 'Missing'
+                });
             }
-        });
-    }
-
-    importHistory.forEach((entity, index) => {
-        const { form_type, link, status, data } = entity;
-        const matchField = linkFieldMapping[form_type];
-        let cch_status = false
-        let time_stamp = ''
-        let cch_import_status = false
-        console.log(link)
-
-        // if (Object.keys(entity.data || {}).length > 0) {
-        //     return
-        // }
-        console.log(111)
-        // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
-        if (!Array.isArray(data) || !matchField) return;
-
-        // key = return_id hoặc id của entity (tuỳ chọn)
-        const key = entity.id;
-
-        // Trường hợp chưa có link => hiển thị là new item
-        if (link === "New Item" || !link) {
-            console.log(123)
-            const entityData = data[0] || {};
-            const displayText = (entityData[matchField] || "(missing)").toString();
-
-            if (entityData["tax_year"] == '2016') {
-                return
-            }
-
-            cch_status = entity.is_imported_to_cch
-            time_stamp = entity.imported_to_cch_at
-            cch_import_status = entity.cch_import_status
-
-            const tableRow = createTableRow(
-                form_type,
-                displayText,
-                key,
-                cch_status,
-                time_stamp,
-                cch_import_status,
-                true,
-                " (New item)",
-                status
-            );
-
-            tableBody.appendChild(tableRow);
-            checkedRows.push(tableRow);
         }
     });
 
-
-    [...checkedRows, ...uncheckedRows].forEach(row => tableBody.appendChild(row));
-
-}
-
-function renderNewItem(importHistory){
-    
-    const checkedRows = [];
-    const uncheckedRows = [];
-
-    const tableBody = document.getElementById("document-table-body");
-    tableBody.innerHTML = '';
-
-    const linkFieldMapping = {
-        "W-2": "Employer_Name",
-        "1099-DIV": "Payer_Name"
+    const summary_checklist = {
+        nonable,
+        new_found: newFound,
+        missing
     };
 
-    importHistory.forEach((entity, index) => {
-        const { form_type, link, status, data } = entity;
-        const matchField = linkFieldMapping[form_type];
-        let cch_status = false
-        let time_stamp = ''
-        let cch_import_status = false
-        
-        // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
-        if (!Array.isArray(data) || !matchField) return;
+    console.log('✅ Checklist Summary:', summary_checklist);
+    localStorage.setItem('summary_checklist', JSON.stringify(summary_checklist));
 
-        // key = return_id hoặc id của entity (tuỳ chọn)
-        const key = entity.id;
-
-        // Trường hợp chưa có link => hiển thị là new item
-        if (link === "New Item" || !link) {
-            console.log(123)
-            const entityData = data[0] || {};
-            const displayText = (entityData[matchField] || "(missing)").toString();
-
-            if (entityData["tax_year"] == '2016') {
-                return
-            }
-
-            cch_status = entity.is_imported_to_cch
-            time_stamp = entity.imported_to_cch_at
-            cch_import_status = entity.cch_import_status
-
-            const tableRow = createTableRow(
-                form_type,
-                displayText,
-                key,
-                cch_status,
-                time_stamp,
-                cch_import_status,
-                true,
-                " (New item)",
-                status
-            );
-
-            tableBody.appendChild(tableRow);
-            checkedRows.push(tableRow);
-        }
-    });
-
-
-    [...checkedRows, ...uncheckedRows].forEach(row => tableBody.appendChild(row));
-}
-
-document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("dropdown-btn")) {
-        const item = e.target.closest(".checklist-item");
-
-        // Nếu chưa có .checklist-details thì thêm vào (demo nội dung chi tiết)
-        let details = item.querySelector(".checklist-details");
-        if (!details) {
-            details = document.createElement("div");
-            details.className = "checklist-details hidden"; // ✅ thêm hidden lúc tạo
-            details.innerHTML = "<p style='padding: 10px;'>More details coming soon...</p>";
-            item.appendChild(details);
-        }
-
-        // Toggle ẩn/hiện
-        details.classList.toggle("hidden");
-        e.target.textContent = details.classList.contains("hidden") ? "▼" : "▲";
-    }
+    window.location.href = '../templete/upload_summary.html';
 });
 
+//=============================handle upload pdf=============================
+const globalEntityOptions = [];
 
 const displayFieldMapping = {
     "W-2": ["Employer name", "TS"],
@@ -886,683 +1476,336 @@ const displayFieldMapping = {
     "K-1 1120S": ["TSJ", "Corporation's name"]
 };
 
+// 🔁 Khi page load, generate list
+function generateEntityListFromOCR(jsonData) {
+    for (const formType in displayFieldMapping) {
+        const displayFields = displayFieldMapping[formType];
+        const formData = jsonData[formType];
+        if (!formData || !Array.isArray(formData.data)) continue;
 
+        formData.data.forEach(item => {
+            const pk = item["General primary key"] || item["General"] || item;
+            const displayText = displayFields.map(f => pk?.[f] || "(missing)").join(" - ");
+            globalEntityOptions.push({
+                formType,
+                label: `${formType} - ${displayText}`
+            });
+        });
+    }
+}
 
-// document.addEventListener("DOMContentLoaded", () => {
-//     const searchInput = document.getElementById("search-return-value");
-//     const returnListContainer = document.getElementById("list-returns");
+//=======================handle confirm btn======================
+document.getElementById('confirm-btn').addEventListener('click', () => {
+    const importHistory = localStorage.getItem("importHistory");
+    handle_confirm_btn(importHistory)
+    const jsonData = localStorage.getItem('jsonData');
+    const importHistoryNew = localStorage.getItem("importHistory");
+    renderChecklist(JSON.parse(jsonData), JSON.parse(importHistoryNew))
+    renderUploadedDocuments(JSON.parse(importHistoryNew))
+})
 
-//     searchInput.addEventListener("input", () => {
-//         const keyword = searchInput.value.trim().toLowerCase();
+async function handle_confirm_btn(importHistory) {
+    const data = JSON.parse(importHistory)
 
-//         if (!returnListContainer || returnListContainer.style.display === "none") {
-//             return;
-//         }
+    const displayFieldMapping = {
+        "W-2": "Employer_Name",
+        "1099-DIV": "Payer_Name"
+    };
 
-//         const labels = returnListContainer.querySelectorAll("label.radio-item");
+    const rows = document.querySelectorAll(".validation-table tbody tr");
+    rows.forEach(row => {
+        const formType = row.children[2]?.textContent?.trim();
+        const entityKey = row.dataset.entityKey?.toLowerCase();
+        const isValid = row.children[4]?.textContent?.trim();
+        const select = row.querySelector("select.link-select");
+        const selectedLabel = select?.value;
 
-//         labels.forEach(label => {
-//             const text = label.textContent.toLowerCase();
-//             label.style.display = text.includes(keyword) ? "block" : "none";
-//         });
-//     });
-// });
+        if (!formType || !entityKey || !selectedLabel || isValid !== "Valid") return;
 
+        const matchField = displayFieldMapping[formType];
 
+        // ✅ Lặp trực tiếp qua các entity (importHistory là flat list)
+        data.forEach(entity => {
+            if (entity.form_type !== formType || !Array.isArray(entity.data)) return;
 
-//=========================handle show json========================
-
-
-const btn_show_JSON = document.getElementById('btn-show-json')
-
-function displayJsonOverlay(data) {
-    const jsonBox = document.getElementById("result-overview");
-
-    // Chuyển JSON thành HTML dạng tree
-    jsonBox.innerHTML = generateJsonTree(data);
-
-    // Bắt sự kiện toggle sau khi đã render
-    jsonBox.querySelectorAll(".json-toggle").forEach(toggle => {
-        toggle.addEventListener("click", function () {
-            const content = this.nextElementSibling;
-            if (content) {
-                const isCollapsed = content.classList.contains("json-collapsed");
-                content.classList.toggle("json-collapsed", !isCollapsed);
-                this.textContent = isCollapsed ? "[-] " : "[+] ";
+            const fieldValue = entity.data[0]?.[matchField]?.toLowerCase();
+            if (fieldValue === entityKey) {
+                entity.link = selectedLabel;
             }
         });
     });
 
-    const btnDownload = document.getElementById("btn-download-json");
-    btnDownload.onclick = () => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+    console.log(data)
+    console.log(RETURN_ID)
+    localStorage.setItem('importHistory', JSON.stringify(data));
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "tax_data.json";
-        a.click();
-
-        URL.revokeObjectURL(url);
-    };
-}
-
-
-// 🟢 Chuyển JSON thành HTML tree có thể expand/collapse
-function generateJsonTree(json, isRoot = true) {
-    if (typeof json !== "object" || json === null) {
-        return `<span class="json-value">${JSON.stringify(json)}</span>`;
-    }
-
-    const isArray = Array.isArray(json);
-    let html = `<div class="json-container">`;
-
-    if (!isRoot) { //onclick="toggleJsonTree(this)"
-        html += `<span class="json-toggle" >[+] </span>`;
-        html += `<div class="json-content json-collapsed">`;
-    }
-
-    html += isArray ? "[" : "{";
-    html += `<ul class="json-list">`;
-
-    for (const key in json) {
-        const value = json[key];
-        const isObject = typeof value === "object" && value !== null;
-        const keyLabel = isArray
-            ? ""
-            : `<span class="json-key">"${key}"</span>: `;
-
-        html += `<li>${keyLabel}`;
-
-        if (isObject) {
-            html += generateJsonTree(value, false);
-        } else {
-            html += `<span class="json-value">${JSON.stringify(value)}</span>`;
-        }
-
-        html += `,</li>`;
-    }
-
-    html += `</ul>${isArray ? "]" : "}"}`;
-
-    if (!isRoot) {
-        html += `</div>`;
-    }
-
-    html += `</div>`;
-    return html;
-}
-
-document.querySelectorAll(".json-toggle").forEach(toggle => {
-    toggle.addEventListener("click", function () {
-        const content = this.nextElementSibling;
-        if (content) {
-            const isCollapsed = content.classList.contains("json-collapsed");
-            content.classList.toggle("json-collapsed", !isCollapsed);
-            this.textContent = isCollapsed ? "[-] " : "[+] ";
-        }
-    });
-});
-
-// 🟢 Xử lý sự kiện click để thu gọn/mở rộng JSON tree
-function toggleJsonTree(element) {
-    const content = element.nextElementSibling;
-    if (content) {
-        const isCollapsed = content.classList.contains("json-collapsed");
-        content.classList.toggle("json-collapsed", !isCollapsed);
-        element.textContent = isCollapsed ? "[-] " : "[+] ";
-    }
-}
-
-// render status box
-function renderStatusBox(jsonData, importHistory) {
-    // for (const [key, value] of Object.entries(jsonData)) {
-    //     if (key !== "ReturnHeader" && value.entities_count) {
-    //         totalEntities += value.entities_count;
-    //     }
-    // }
-    const totalEntities = document.querySelectorAll("#document-table-body tr").length;
-    console.log("Total entities:", totalEntities);
-
-    // console.log("Total entities:", totalEntities);
-    const checkedCount = document.querySelectorAll('#document-table-body input[type="checkbox"]:checked').length;
-    console.log("Số checklist đã được chọn:", checkedCount);
-
-    const importedHistory = importHistory || [];
-    const latestImportTime = importedHistory.length > 0 ? importedHistory[0].imported_at : null;
-    var formattedTime = ''
-    if (latestImportTime) {
-        console.log("Thời gian import gần nhất:", latestImportTime);
-        // const isoString = "2025-05-09T14:39:26.067791+00:00";
-        const date = new Date(latestImportTime);
-
-        const pad = num => String(num).padStart(2, '0');
-        formattedTime = `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-
-        console.log(formattedTime);
-    }
-
-    const status = checkedCount === totalEntities && totalEntities > 0 ? "Done" : "In Progress";
-
-    // Gán vào các label
-    const labels = document.querySelectorAll('.status-box #label-progress');
-    if (labels.length >= 4) {
-        labels[0].innerHTML = `<strong>Progress: </strong>${checkedCount}/${totalEntities}`;
-        labels[1].innerHTML = `<strong>Status: </strong>${status}`;
-        labels[2].innerHTML = `<strong>Last Update: </strong>${formattedTime}`;
-        labels[3].innerHTML = `<strong>CCH Push Status: </strong>Pending`;
-    }
-}
-
-//  checked table checklist
-// const rowCheckboxes = document.querySelectorAll(".document-table tbody input[type='checkbox']");
-const tableBody = document.getElementById("document-table-body");
-const selectAllCheckbox = document.getElementById("select-all");
-
-selectAllCheckbox.addEventListener("change", function () {
-    const all = document.querySelectorAll("#document-table-body input[type='checkbox']:not(:disabled)");
-    all.forEach(cb => cb.checked = this.checked);
-});
-
-tableBody.addEventListener("change", function (e) {
-    if (e.target.matches("input[type='checkbox']")) {
-        const checkboxes = tableBody.querySelectorAll("input[type='checkbox']:not(:disabled)");
-        const allChecked = [...checkboxes].every(cb => cb.checked);
-        selectAllCheckbox.checked = allChecked;
-    }
-});
-
-
-
-function createTableRow(formType, displayText, key, cch_status, timeStamp, cch_import_status, isChecked = false, newFound = '', status = '3') {
-    const row = document.createElement("tr");
-    row.setAttribute("data-key", key);
-
-    if (newFound != '') {
-        console.log(displayText)
-    }
-    let show_cch_status = `Pending`
-    let formatted = ''
-    //  nếu đã import to cch
-    if (cch_status) {
-        const date = new Date(timeStamp);
-
-        // Format mm-dd-yyyy hh:mm:ss
-        formatted = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()} ` +
-            `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-        show_cch_status = `${cch_import_status}`
-    }
-    let statusText = "Pending to Upload";  // default
-    if (status === '1') statusText = "✅ CCH Import - Success";
-    else if (status === '2') statusText = "✅ Uploaded";
-    else if (status === '4') statusText = "Not Applicable"
-    else if (status === '5') statusText = "Provided Elsewhere"
-
-    row.innerHTML = `
-        <td class="doc-name">${formType} (${displayText})${newFound}</td>
-        <td style="text-align: center;"><span class="status-tag status-${status}">${statusText}</span></td>
-        <td class="center-row"><input type="checkbox" ${isChecked ? "checked" : ""} ${status != '2' ? "disabled" : ""}></td>
-        <td class="import-cch-status"><span class="status-tag status-${show_cch_status}">${show_cch_status}</span></td>
-        <td class="import-cch-timeStamp">${formatted}</td>
-        <td class="center-cell">
-            <button class="action-btn delete-btn" title="Remove">🗑</button>
-        </td>
-    `;
-    return row;
-}
-
-//=====================================remove import item============================
-document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("delete-btn")) {
-        const row = e.target.closest("tr");
-        const importId = row.getAttribute("data-key");
-        if (importId == '0') { return }
-        if (confirm(`Are you sure you want to delete this import - ${importId}? `)) {
-            // return
-            fetch(`${API_BASE_URL}/api/cch-import/delete-import/${importId}/`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-
-                        const checkbox = row.querySelector("input[type='checkbox']");
-                        const statusTag = row.querySelector(".status-tag");
-
-                        checkbox.checked = false;
-                        checkbox.disabled = true;
-                        // checkbox.classList.remove("na", "pe"); // nếu có icon tuỳ chỉnh
-                        // row.classList.remove("active"); // nếu có style active
-
-                        if (statusTag) {
-                            statusTag.innerText = "Pending to Upload";
-                            statusTag.className = "status-tag status-3";
-                        }
-
-                        console.log("success")
-                        showUploadAlertUpload('success', "remove sucessfully!", 'upload-alert-placeholder-search');
-                    } else {
-                        showUploadAlertUpload('danger', data.error, 'upload-alert-placeholder-search');
-                    }
-                })
-                .catch(err => {
-                    showUploadAlertUpload('danger', err, 'upload-alert-placeholder-search');
-                    console.error(err);
-                });
-        }
-    }
-});
-
-//======================================remove all imports===========================
-document.getElementById("btn-generate-pbc").addEventListener('click', () => {
-    showLoading()
-    console.log(returnID)
-    //  return
-    fetch(`${API_BASE_URL}/api/cch-import/delete-imports/`, {
-        method: "DELETE",
+    //==============================update import========================
+    const update_imports = await fetch(`${API_BASE_URL}/api/cch-import/update-imports/`, {
+        method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ return_id: returnID })
+        body: JSON.stringify({
+            return_id: RETURN_ID,
+            data: data
+        }),
     })
         .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // upload-alert-placeholder-search
-                console.log(data)
-                //export_tax_data()
-
-                showUploadAlertUpload('success', "remove all imports success", 'upload-alert-placeholder-checklist');
-            } else {
-                showUploadAlertUpload('danger', data.error, 'upload-alert-placeholder-checklist');
-
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            showUploadAlertUpload('danger', err, 'upload-alert-placeholder-search');
-        });
-    var imported = []
-    localStorage.setItem('importHistory', JSON.stringify(imported));
-    var jsonData = localStorage.getItem('jsonData');
-    if (jsonData) {
-        renderChecklist(JSON.parse(jsonData), imported);
-    } else {
-        console.warn("jsonData is null or undefined in localStorage.");
-    }
-
-    renderStatusBox(jsonData, imported)
-    hideLoading()
-})
-
-//==================================export data with return id============================
-function export_tax_data() {
-
-    var json = localStorage.getItem('jsonData');
-    var jsonData = JSON.parse(json);
-    
-
-    const summary_container = document.getElementById('tax-summary-container')
-    showLoading();
-    document.body.style.cursor = 'wait';
-    console.log(returnID)
-
-    fetch(`${API_BASE_URL}/api/cch-import/full_export_pipeline2/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ return_id: returnID })
-    })
-        .then(res => res.json())
-        .then(response => {
-            if (response.success) {
-                console.log("success");
-
-                const jsonData = response.data; // <-- dữ liệu chính
-                const importHistory = response.imported_history || []; // <-- lấy import history
-
-                console.log(response)
-                localStorage.setItem('jsonData', JSON.stringify(jsonData));
-                localStorage.setItem('importHistory', JSON.stringify(importHistory));
-                // window.location.href = "../templete/download.html";
-                // return
-                // truyền cả 2
-                renderChecklist(jsonData, importHistory);
-                //render json
-                // displayJsonOverlay(jsonData)
-
-                //  get data for status box
-                renderStatusBox(jsonData, importHistory)
-
-
-                // hide button-box
-                // toggleVisibility("button_box", "hide")
-                // toggleVisibility("title-download", "hide")
-            } else {
-                const message = "❌ Download failed: " + response.error;
-                showUploadAlertUpload('danger', message, 'upload-alert-placeholder-search');
-            }
-        })
-        .catch(err => {
-            const message = "❌ Download failed: " + err;
-            showUploadAlertUpload('danger', message, 'upload-alert-placeholder-search');
-        })
-        .finally(() => {
-            hideLoading();
-            summary_container.style.display = 'block';
-            // document.getElementById('client-questionnaire').style.display = 'block';
-            // document.getElementById('search-return-value').value = '';
-            // document.getElementById("list-returns").style.display = 'None';
-            // document.getElementById("search-container").style.display = 'None';
-            document.body.style.cursor = 'default';
-            document.getElementById('close-overlay2').disabled = false
-        });
-}
-
-function updateImportedStatus() {
-
-    export_tax_data()
+        .then(data => console.log("✅ Success:", data))
+        .catch(err => console.error("❌ Error:", err));
 
 }
 
-//===============================send to cch======================================================
-// function getCheckedImportItems(importHistory) {
-//     const checkedIds = [];
 
-//     // 1. Duyệt qua bảng và lấy các hàng được check
-//     document.querySelectorAll("#document-table-body tr").forEach(row => {
-//         const checkbox = row.querySelector("input[type='checkbox']");
-//         const importId = row.getAttribute("data-key");
+//=====================================extract filename from url========================
+function extractOriginalFilename(url) {
 
-//         if (checkbox && checkbox.checked && importId !== '0') {
-//             checkedIds.push(Number(importId));  // dùng số nguyên để so sánh đúng
-//         }
-//     });
+    const encodedFilename = url.split('/').pop(); // file1%202024_05-13-2025%2018-43-20.pdf
+    const decoded = decodeURIComponent(encodedFilename); // file1 2024_05-13-2025 18-43-20.pdf
+    const original = decoded.replace(/_\d{2}-\d{2}-\d{4} \d{2}-\d{2}-\d{2}\.pdf$/, ".pdf");
+    return original;
 
-//     // 2. Lọc lại danh sách importHistory
-//     const selectedImports = importHistory.filter(item => checkedIds.includes(item.id));
-
-//     return selectedImports;
-// }
-
-function getCheckedImportItems(importHistory) {
-    const checkedIds = [];
-
-    // 1. Duyệt qua bảng và lấy các hàng được check mà không bị disabled
-    document.querySelectorAll("#document-table-body tr").forEach(row => {
-        const checkbox = row.querySelector("input[type='checkbox']");
-        const importId = row.getAttribute("data-key");
-
-        if (
-            checkbox &&
-            checkbox.checked &&
-            !checkbox.disabled &&          // ✅ Không bị disable
-            importId !== '0'
-        ) {
-            //checkedIds.push(importId) // Đưa về kiểu số để so sánh chính xác
-            const idNum = parseInt(importId.match(/\d+$/)?.[0]);
-            if (!isNaN(idNum)) {
-                checkedIds.push(idNum); // ✅ Đưa vào mảng dưới dạng số
-            }
-        }
-    });
-
-    // 2. Lọc lại danh sách importHistory theo danh sách id đã chọn
-    const selectedImports = importHistory.filter(item => checkedIds.includes(item.id));
-
-    return selectedImports;
 }
+//=================================render table after import============================
+const seen = new Set(); // ✅ Dùng để tránh render trùng
 
-//  sent to cch
-document.getElementById("btn-send-to-cch").addEventListener("click", async () => {
-    var returnId = "2024I:1234567.001:V5";
-    const jsonData = localStorage.getItem('jsonData');
-    const data = JSON.parse(jsonData);
-    const importHistory = localStorage.getItem('importHistory');
-    const imports = JSON.parse(importHistory);
+function appendRecognizedDocsToTable(result) {
 
-    
+    const tableBody = document.querySelector(".validation-table tbody");
+    if (!tableBody) return;
 
-    const import_checked = getCheckedImportItems(imports)
-
-    document.getElementById('close-overlay2').disabled = true
-
-    const payload = {
-        return_id: returnID,
-        imports: import_checked
+    const displayFieldMapping = {
+        "W-2": ["Employer_Name", "TS"],
+        "1099-DIV": ["Payer_Name"]
     };
 
+    const file_name = result.file_url ? extractOriginalFilename(result.file_url) : "";
 
-    document.getElementById("processing-overlay2").classList.remove("hidden");
-    //  Testing
-    // console.log("checked")
-    // simulateSteps()
-    // showUploadAlertUpload('success', 'upload successfully!', 'upload-alert-placeholder-processing2');
-    // return
+    const returnid = document.getElementById('client-line-returnID').innerText;
 
-    console.log(payload)
-    
-    showLoading()
-    try {
+    result.recognized_documents.forEach(doc => {
+        const page = doc.page_number;
+        const formType = doc.form_type;
+        const linkFromDoc = doc.link || "";
+        const entities = doc.data || [];
 
-        const response = await fetch(`${API_BASE_URL}/api/cch-import/get-imports/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            const response = await fetch(data.excel_url);
-            const blob = await response.blob();
-
-            const safeReturnId = returnID.replace(/[:/\\?%*|"<>]/g, "-");
-            const filename = `1040 template - [${safeReturnId}].xlsx`;
-
-            const link = document.createElement("a");
-            link.href = window.URL.createObjectURL(blob);
-            link.download = filename;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            const finalStatus = await pollUntilDone(data.task);
-        } else {
-            alert("❌ Error: " + data.error);
+        if (typeof doc.data === 'object' && !Array.isArray(doc.data) && Object.keys(doc.data).length === 0) {
+            return;
         }
 
-    } catch (err) {
-        console.error("Error:", err);
-        alert("❌ Error occurred while calling API.");
-    } finally {
-        hideLoading()
+        entities.forEach(entity => {
+            const displayFields = displayFieldMapping[formType] || [];
+            const key = formType + "|" + displayFields.map(f => entity[f] || "").join("|").toLowerCase();
 
-    }
+            if (seen.has(key)) return;
+            seen.add(key);
 
-});
+            const isValid = entity.tax_year == returnid.slice(0, 4);
 
-const DONE_STATUSES = ["SUCCESS", "FAILED"];
-// Bắt đầu polling để xem tiến trình
-function pollUntilDone(taskId) {
-    return new Promise((resolve, reject) => {
-        // const uploadBtn = document.getElementById("upload-btn");
-        document.body.classList.add('cursor-loading');
+            const displayText = displayFields.map(f => entity[f] || "(missing)").join(" - ");
 
-        const intervalId = setInterval(() => {
-            fetch(`${API_BASE_URL}/api/cch-import/status/${taskId}/`)
-                .then(res => res.json())
-                .then(statusData => {
-                    console.log(taskId)
-                    console.log("⏳ Step:", statusData.step);
-                    console.log("📦 Status:", statusData.status);
+            const tr = document.createElement("tr");
+            const entityKeyField = formType === "W-2" ? entity["Employer_Name"]
+                : formType === "1099-DIV" ? entity["Payer_Name"]
+                    : "";
+            tr.setAttribute("data-entity-key", (entityKeyField || "").toLowerCase());
 
-                    updateTabbar(statusData.step);
-                    //  DONE_STATUSES.includes(statusData.status)
-                    if (DONE_STATUSES.includes(statusData.status)) {
-                        clearInterval(intervalId);
-                        console.log(`✅ Done! Status: ${statusData.status}`);
+            tr.innerHTML = `
+                <td>${page}</td>
+                <td>${file_name}</td>
+                <td>${formType}</td>
+                <td>${displayText}</td>
+                <td class="${isValid ? 'valid' : 'invalid'}">
+                    ${isValid ? 'Valid' : `Invalid Tax Year (${entity.tax_year || 'N/A'})`}
+                </td>
+                <td></td>
+            `;
 
-                        document.body.classList.remove('cursor-loading');
-                        showUploadAlertUpload('success', 'upload successfully!', 'upload-alert-placeholder-processing2');
+            const select = document.createElement("select");
+            select.className = "link-select";
 
-                        resolve(statusData);
-                        updateImportedStatus()
+            if (globalEntityOptions?.length) {
+                let matched = false;
+                const filteredOptions = globalEntityOptions.filter(opt => opt.formType === formType);
+
+                filteredOptions.forEach(opt => {
+                    const option = document.createElement("option");
+                    option.textContent = opt.label;
+
+                    const full_key = `${formType} - ${displayText}`.toLowerCase();
+                    const optionLabel = opt.label.toLowerCase();
+                    console.log(optionLabel)
+                    console.log(full_key)
+                    console.log(linkFromDoc)
+
+                    if (
+                        optionLabel === linkFromDoc.toLowerCase() ||
+                        (linkFromDoc === "" && optionLabel === full_key)
+                    ) {
+                        option.selected = true;
+                        matched = true;
                     }
-                })
-                .catch(err => {
-                    clearInterval(intervalId);
-                    console.error("❌ Error checking status", err);
-                    showUploadAlertUpload('danger', err, 'upload-alert-placeholder-processing2');
-                    document.body.classList.remove('cursor-loading');
 
-                    reject(err);
+                    select.appendChild(option);
                 });
-        }, 1000);
-    });
-}
 
+                select.appendChild(new Option("──────────", "", false, false)).disabled = true;
+                const newItem = new Option("New Item", "New Item");
+                const invalidItem = new Option("Cancel", "Cancel");
 
-//  simulating
-function updateTabbar(currentStepString) {
-    // Lấy số step từ chuỗi, ví dụ "3. Download..." => 3
-    const match = currentStepString.match(/^(\d+)\./);
-    if (!match) return;
+                select.appendChild(newItem);
+                select.appendChild(invalidItem);
 
-    const stepNumber = parseInt(match[1]);
-
-    // Reset tất cả tab
-    const tabs = document.querySelectorAll("#step-tabs .step");
-    tabs.forEach(tab => {
-        tab.classList.remove("active");
-    });
-
-    // Highlight tab hiện tại
-    const currentTab = document.querySelector(`#step-tabs .step[data-step="${stepNumber}"]`);
-    if (currentTab) {
-        currentTab.classList.add("active");
-    }
-}
-const STEP_NAMES = [
-    "1. Upload input file",
-    "2. Extract Return ID and entities to import",
-    "3. Downloading tax API data for W-2",
-    "4. Validating data for W-2",
-    "5. Uploading batches to CCH",
-    "6. Completed"
-];
-
-function simulateSteps() {
-    let currentIndex = 0;
-
-    const intervalId = setInterval(() => {
-        const currentStep = STEP_NAMES[currentIndex];
-        console.log("🧪 Simulated Step:", currentStep);
-
-        // Gọi update UI
-        updateTabbar(currentStep);
-        // document.getElementById("progress-step").innerText = currentStep;
-
-        currentIndex++;
-
-        if (currentIndex >= STEP_NAMES.length) {
-            clearInterval(intervalId);
-            console.log("✅ Simulation complete!");
-        }
-    }, 3000);
-}
-
-
-document.getElementById("close-overlay2").addEventListener("click", () => {
-    document.getElementById("processing-overlay2").classList.add("hidden");
-});
-
-
-//========================================send pbc list============================
-document.getElementById("btn-send-client").addEventListener('click', async () => {
-    var email = 'info@silversea-analytics.com';
-    const jsonData = localStorage.getItem("jsonData");
-    const importHistory = localStorage.getItem("importHistory");
-    const returnID = localStorage.getItem("returnID");
-    var clientName = 'info@silversea-analytics.com'
-
-    var taxYear = '2024'
-    if (jsonData) {
-        const data = JSON.parse(jsonData)
-        const general = data.General || {};
-        if (general) {
-            clientName = `${general["First name - TP"]} ${general["Last name - TP"]}`
-            const primaryEmail = general["Primary email address"]
-            if (primaryEmail && primaryEmail !== "undefined" && primaryEmail !== "null") {
-                email = primaryEmail;
+                if (!matched) newItem.selected = true;
+                if (!isValid) invalidItem.selected = true;
             }
-        }
-        const returnHeader = data.ReturnHeader || {};
-        taxYear = returnHeader.TaxYear
-    }
+            else {
+                const newItem = new Option("New Item", "New Item");
+                const invalidItem = new Option("Cancel", "Cancel");
 
-    if (importHistory){
-        const imports = JSON.parse(importHistory)
-        imports.forEach(item => {
-            console.log(item.id)
-        })
-    }
-    console.log(taxYear)
-    console.log(clientName)
-    console.log(email)
-    // return
-    showLoading();
+                select.appendChild(newItem);
+                select.appendChild(invalidItem);
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/cch-import/send-pbclist-link/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({
-                email: email,
-                clientName: clientName,
-                taxYear: taxYear,
-                jsonData: jsonData,
-                importHistory: importHistory,
-                returnID: returnID 
-            })
+                if (isValid) {
+                    newItem.selected = true;
+                } else {
+                    invalidItem.selected = true;
+                }
+            }
+
+            tr.querySelector("td:last-child").appendChild(select);
+            tableBody.appendChild(tr);
+        });
+    });
+}
+
+
+function renderUploadedDocuments(importHistory) {
+    const container = document.querySelector(".uploaded-documents .document-group");
+    container.innerHTML = ''; // Xóa nội dung cũ
+
+    const seenKeys = new Set(); // Dùng để lọc trùng
+
+    const displayFieldMappingImport = {
+        "W-2": ["Employer_Name", "TS"],
+        "1099-INT": ["Payer_Name", "Account_Number"],
+        "1099-DIV": ["Payer_Name", "Account_Number"],
+        "1099-R": ["Payer_Name"],
+        "Consolidated 1099": ["Payer name"],
+        "1099-SSA": ["TSJ"],
+        "K-1 1041": ["TSJ", "Name of k-1 entity"],
+        "K-1 1065": ["TSJ", "Partnership's name"],
+        "K-1 1120S": ["TSJ", "Corporation's name"]
+    };
+
+    importHistory.forEach(importItem => {
+        const fileName = importItem.pdf_path?.split("/").pop() || "(unknown)";
+        const details = document.createElement("details");
+        details.open = true;
+
+        const summary = document.createElement("summary");
+        summary.textContent = fileName;
+        summary.dataset.url = importItem.pdf_path;
+        summary.style.cursor = "pointer";
+
+        summary.addEventListener("click", function (e) {
+            e.preventDefault();
+            const fileUrl = summary.dataset.url;
+            if (!fileUrl) return;
+            const returnData = localStorage.getItem('returnID');
+            if (returnData) {
+                const textReturnID = JSON.parse(returnData); // Ví dụ: "2024IND:123456:V1"
+                console.log(textReturnID)
+            }
+            // window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+            const fullUrl = `../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
+            window.open(fullUrl, "_blank");
         });
 
-        const result = await response.json();
-        // alert(result.message || "Email sent!");
+        details.appendChild(summary);
+        const ul = document.createElement("ul");
+        ul.className = "entity-list";
 
-        showUploadAlertUpload('success', `Email sent to ${email}`, 'upload-alert-placeholder-checklist');
-    } catch (error) {
-        console.error("Error sending email:", error);
-        const massage = `Error sending email:  error`
-        // alert("Failed to send email.");
-        showUploadAlertUpload('danger', massage, 'upload-alert-placeholder-checklist');
-    } finally {
-        hideLoading();
-    }
-});
+        const docList = Array.isArray(importItem.data) ? [importItem] : [];
 
-const overlay = document.querySelector(".detail-json-container");
-const closeBtn = document.getElementById("close-overlay");
+        docList.forEach(docItem => {
+            const formType = docItem.form_type;
+            const entities = Array.isArray(docItem.data) ? docItem.data : [];
+            const mappingFields = displayFieldMappingImport[formType] || [];
 
-closeBtn.addEventListener("click", () => {
-    overlay.style.display = "none";
-});
-//=======================================show detail json=========================================
-document.getElementById('btn-detail-json').addEventListener('click', () => {
+            entities.forEach(entity => {
+                // Bỏ qua nếu tax_year không khớp
+                if (TAX_YEAR && entity.tax_year && entity.tax_year != TAX_YEAR) return;
+
+                const key = formType + "|" + mappingFields.map(f => (entity[f] || "").toLowerCase()).join("|");
+                if (seenKeys.has(key)) return;
+                seenKeys.add(key);
+
+                const displayText = mappingFields.map(f => entity[f] || "(missing)").join(" - ");
+                const li = document.createElement("li");
+                li.textContent = `${formType} - ${displayText}`;
+                ul.appendChild(li);
+            });
+        });
+
+        if (ul.children.length > 0) {
+            details.appendChild(ul);
+            container.appendChild(details);
+        }
+    });
+}
 
 
-    overlay.style.display = "flex";
-    var jsonData = localStorage.getItem('jsonData');
-    if (jsonData) {
-        var data = JSON.parse(jsonData)
-        console.log(data)
-        displayJsonOverlay(data)
-    }
 
-})
+
+//=====================toggle show json=======================
+// const btn_show_JSON = document.getElementById('btn-show-json')
+
+// btn_show_JSON.addEventListener('click', () => {
+//     const overview = document.getElementById("result-overview");
+
+//     // Toggle hiển thị
+//     if (overview.style.display === "none" || !overview.style.display) {
+//         overview.style.display = "block";
+//         btn_show_JSON.textContent = "Show JSON"; // 👈 đổi tên button nếu muốn
+//     } else {
+//         overview.style.display = "none";
+//         btn_show_JSON.textContent = "Hide JSON"; // 👈 đổi tên button nếu muốn
+//     }
+// })
+
+
+//download excel file
+
+// const btn_download_excel = document.getElementById('download-excel-btn')
+
+// btn_download_excel.addEventListener('click', () => {
+//     const upload_result = localStorage.getItem('upload_result');
+
+//     if (!upload_result) {
+//         alert("❌ No upload result found.");
+//         return;
+//     }
+
+//     try {
+//         const parsed = JSON.parse(upload_result);
+//         const fileUrl = parsed.file_url;
+//         console.log(parsed)
+//         if (!fileUrl) {
+//             alert("❌ File URL not found in upload result.");
+//             return;
+//         }
+
+//         // ✅ Tạo thẻ <a> để tải
+//         const link = document.createElement('a');
+//         link.href = fileUrl;
+//         link.download = ""; // để trình duyệt tự xử lý
+//         document.body.appendChild(link);
+//         link.click();
+//         document.body.removeChild(link);
+//     } catch (error) {
+//         console.error("❌ Failed to parse upload_result:", error);
+//         alert("❌ Failed to process upload result.");
+//     }
+// })
+

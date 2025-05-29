@@ -693,6 +693,7 @@ function get_data() {
 function renderChecklist(jsonData, importHistory) {
     toggleVisibility("tax-summary-container", "show");
     var TAX_YEAR = ''
+
     // Hiển thị thông tin header
     if (jsonData.ReturnHeader) {
         const header = jsonData.ReturnHeader;
