@@ -372,9 +372,11 @@
                         // Lấy dữ liệu từ backend (có jsonData và importHistory)
                         data = JSON.parse(res.data.jsonData); // Parse jsonData from response
                         importHistory = JSON.parse(res.data.importHistory); // Parse importHistory from response
+                        const returnID = JSON.parse(res.data.returnID);
 
                         localStorage.setItem('jsonData', JSON.stringify(data));
                         localStorage.setItem('importHistory', JSON.stringify(importHistory));
+                        localStorage.setItem('returnID', JSON.stringify(returnID));
                     } else {
                         console.error("Failed to get data from token:", res.error);
                     }
@@ -612,7 +614,6 @@
         });
 
         function save_attachments(importedHistory) {
-            console.log("Ngo Thi Yen")
             console.log(importedHistory)
             var count = importedHistory.length
             const now = new Date();

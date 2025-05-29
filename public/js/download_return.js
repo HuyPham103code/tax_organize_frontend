@@ -1489,6 +1489,7 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
     var email = 'info@silversea-analytics.com';
     const jsonData = localStorage.getItem("jsonData");
     const importHistory = localStorage.getItem("importHistory");
+    const returnID = localStorage.getItem("returnID");
     var clientName = 'info@silversea-analytics.com'
 
     var taxYear = '2024'
@@ -1527,7 +1528,8 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
                 clientName: clientName,
                 taxYear: taxYear,
                 jsonData: jsonData,
-                importHistory: importHistory  
+                importHistory: importHistory ,
+                returnID: returnID 
             })
         });
 
