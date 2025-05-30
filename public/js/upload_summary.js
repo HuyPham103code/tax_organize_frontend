@@ -224,7 +224,7 @@ function renderChecklist(jsonData, importHistory) {
                     && doc.data.every(d => String(d.tax_year) === String(TAX_YEAR));
                 
 
-                if (isSameType && isSameLink && isValidYear) {
+                if (isSameType && isSameLink && (isValidYear || (Object.keys(doc.data).length === 0 && doc.data.constructor === Object))) {
                     console.log("check")
                     console.log(doc.link?.toLowerCase())
                     console.log(fullKey.toLowerCase())

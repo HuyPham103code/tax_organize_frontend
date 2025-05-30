@@ -625,14 +625,14 @@ function get_data() {
 //     });
 // });
 
-function renderReturnHeader(){
+function renderReturnHeader() {
     var returnData = localStorage.getItem('returnID');
     var textReturnID = JSON.parse(returnData)
     console.log(textReturnID)
     const parts = textReturnID.split(':');
     document.getElementById("return-header-section").style.display = "block";
-    document.getElementById("tax-year").textContent = textReturnID.slice(0,4) || "(missing)";
-    document.getElementById("return-type").textContent = textReturnID.slice(4,5) || "(missing)";
+    document.getElementById("tax-year").textContent = textReturnID.slice(0, 4) || "(missing)";
+    document.getElementById("return-type").textContent = textReturnID.slice(4, 5) || "(missing)";
     document.getElementById("version").textContent = parts[2] || "(missing)";
     document.getElementById("client-id").textContent = parts[1] || "(missing)";
 }
@@ -640,8 +640,7 @@ function renderReturnHeader(){
 function renderChecklist(jsonData, importHistory) {
     toggleVisibility("tax-summary-container", "show");
 
-    if(jsonData == {} || jsonData == '' || !jsonData ) 
-    {
+    if (jsonData == {} || jsonData == '' || !jsonData) {
         renderNewItem(importHistory)
         return
     }
@@ -797,8 +796,8 @@ function renderChecklist(jsonData, importHistory) {
 
 }
 
-function renderNewItem(importHistory){
-    
+function renderNewItem(importHistory) {
+
     const checkedRows = [];
     const uncheckedRows = [];
 
@@ -816,7 +815,7 @@ function renderNewItem(importHistory){
         let cch_status = false
         let time_stamp = ''
         let cch_import_status = false
-        
+
         // Kiểm tra nếu không có data hoặc không có matchField thì bỏ qua
         if (!Array.isArray(data) || !matchField) return;
 
@@ -1148,6 +1147,15 @@ document.addEventListener("click", function (e) {
 
                         console.log("success")
                         showUploadAlertUpload('success', "remove sucessfully!", 'upload-alert-placeholder-search');
+
+                        const importHistoryRaw = localStorage.getItem("importHistory");
+                        if (importHistoryRaw) {
+                            let importHistory = JSON.parse(importHistoryRaw);
+                            importHistory = importHistory.filter(item => item.id !== Number(importId));
+                            localStorage.setItem("importHistory", JSON.stringify(importHistory));
+                            renderStatusBox('jsonData', importHistory)
+                        }
+
                     } else {
                         showUploadAlertUpload('danger', data.error, 'upload-alert-placeholder-search');
                     }
@@ -1207,7 +1215,7 @@ function export_tax_data() {
 
     var json = localStorage.getItem('jsonData');
     var jsonData = JSON.parse(json);
-    
+
 
     const summary_container = document.getElementById('tax-summary-container')
     showLoading();
@@ -1329,7 +1337,7 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
     const importHistory = localStorage.getItem('importHistory');
     const imports = JSON.parse(importHistory);
 
-    
+
 
     const import_checked = getCheckedImportItems(imports)
 
@@ -1349,7 +1357,7 @@ document.getElementById("btn-send-to-cch").addEventListener("click", async () =>
     // return
 
     console.log(payload)
-    
+
     showLoading()
     try {
 
@@ -1511,7 +1519,7 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
         taxYear = returnHeader.TaxYear
     }
 
-    if (importHistory){
+    if (importHistory) {
         const imports = JSON.parse(importHistory)
         imports.forEach(item => {
             console.log(item.id)
@@ -1532,8 +1540,8 @@ document.getElementById("btn-send-client").addEventListener('click', async () =>
                 clientName: clientName,
                 taxYear: taxYear,
                 jsonData: jsonData,
-                importHistory: importHistory ,
-                returnID: returnID 
+                importHistory: importHistory,
+                returnID: returnID
             })
         });
 
