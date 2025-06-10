@@ -17,13 +17,13 @@
     <div class="container">
         <div class="navbar">
             <div class="left">
-                <a href="../templete/home.html">
+                <a href="../template/home.html">
                     <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" />
                 </a>
             </div>
 
             <div class="center">
-                <a href="../templete/basic_info.html" class="nav-item active">
+                <a href="../template/basic_info.html" class="nav-item active">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
@@ -31,7 +31,7 @@
                     Basic Info
                 </a>
 
-                <a href="../templete/document.html" class="nav-item">
+                <a href="../template/document.html" class="nav-item">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2 .667 2 2-.667 2-2 2m0-14c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z" />
@@ -39,7 +39,7 @@
                     Upload Document
                 </a>
 
-                <a href="../templete/upload_summary.html" class="nav-item ">
+                <a href="../template/upload_summary.html" class="nav-item ">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M3 10h18M3 6h18a2 2 0 012 2v8a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2z" />
@@ -126,7 +126,7 @@
         
                 <div class="nav-buttons">
                     <button type="button" onclick="history.back()">← Back</button>
-                    <button type="button" onclick="window.location.href='../templete/document.html'">Continue →</button>
+                    <button type="button" onclick="window.location.href='../template/document.html'">Continue →</button>
                 </div>
             </form>
         </div> -->
@@ -278,7 +278,7 @@
 
                 <div class="nav-buttons">
                     <button type="button" onclick="history.back()">← Back</button>
-                    <!-- <button type="button" onclick="window.location.href='../templete/document.html'">Continue →</button> -->
+                    <!-- <button type="button" onclick="window.location.href='../template/document.html'">Continue →</button> -->
                     <button type="button" id="btn-continue">Continue →</button>
                 </div>
             </div>
@@ -291,13 +291,44 @@
         import { getReturnID } from '../js/utils/get_data_header.js'
         import { API_BASE_URL } from '../js/utils/config.js'
 
+        function maskSSN(ssn) {
+            if (!ssn) return "";
+
+            let masked = "";
+            let digits = ssn.replace(/\D/g, "");  // Lấy toàn bộ chữ số
+            let last4 = digits.slice(-4);         // Lấy 4 số cuối
+            let digitCount = 0;
+
+            for (let i = 0; i < ssn.length; i++) {
+                let char = ssn[i];
+                if (/\d/.test(char)) {
+                    // Nếu là số và chưa đến 4 số cuối => che
+                    if (digitCount < digits.length - 4) {
+                        masked += "X";
+                    } else {
+                        masked += last4[digitCount - (digits.length - 4)];
+                    }
+                    digitCount++;
+                } else {
+                    masked += char; // giữ nguyên dấu gạch hoặc ký tự đặc biệt
+                }
+            }
+
+            return masked;
+        }
         function renderInfo(data) {
             // General → Taxpayer
             const general = data.General || {};
             console.log(general)
             document.getElementById("taxpayer_firstname").value = general["First name - TP"] || "";
             document.getElementById("taxpayer_lastname").value = general["Last name - TP"] || "";
-            document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+
+            //handle ssn
+            let ssn = general["Social security number - TP"] || "";
+            
+            document.getElementById("taxpayer_ssn").value = maskSSN(ssn);
+            // document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+
             document.getElementById("taxpayer_dob").value = general["Date of birth - TP"] || "";
 
             document.getElementById("taxpayer_phone").value = general["Daytime / work phone no - TP"] || "";
@@ -312,7 +343,10 @@
             // General → Spouse
             document.getElementById("spouse_firstname").value = general["First name - SP"] || "";
             document.getElementById("spouse_lastname").value = general["Last name - SP"] || "";
-            document.getElementById("spouse_ssn").value = general["Social security number - SP"] || "";
+
+            let ssn2 = general["Social security number - SP"] || "";
+            document.getElementById("spouse_ssn").value = maskSSN(ssn2);
+
             document.getElementById("spouse_dob").value = general["Date of birth - SP"] || "";
 
 
@@ -320,6 +354,9 @@
             const container = document.querySelector(".form-dependent");
             container.innerHTML = "";  // Xóa các form cứng ban đầu
             dependents.forEach((dep, index) => {
+                
+                let ssn = dep["SSN"] || "";
+                let value = maskSSN(ssn);
                 const depHTML = `
             <div class="dependent-block" style="display: flex; gap: 40px; margin-bottom: 20px;">
                 <!-- Previous Year Form -->
@@ -331,7 +368,7 @@
                         </div>
                         <div class="form-group full-width">
                             <label>Social Security Number</label>
-                            <input type="text" name="ssn"  value="${dep["SSN"] || ""}"  />
+                            <input type="text" name="ssn"  value="${value}"  />
                         </div>
                     </div>
                 </form>
@@ -413,7 +450,12 @@
 
             document.getElementById("taxpayer_firstname").value = general["First name - TP"] || "";
             document.getElementById("taxpayer_lastname").value = general["Last name - TP"] || "";
-            document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+
+            //handle ssn
+            let ssn = general["Social security number - TP"] || "";
+            document.getElementById("taxpayer_ssn").value = maskSSN(ssn);
+            // document.getElementById("taxpayer_ssn").value = general["Social security number - TP"] || "";
+
             document.getElementById("taxpayer_dob").value = general["Date of birth - TP"] || "";
 
             document.getElementById("taxpayer_phone").value = general["Daytime / work phone no - TP"] || "";
@@ -429,7 +471,9 @@
             // General → Spouse
             document.getElementById("spouse_firstname").value = general["First name - SP"] || "";
             document.getElementById("spouse_lastname").value = general["Last name - SP"] || "";
-            document.getElementById("spouse_ssn").value = general["Social security number - SP"] || "";
+
+            let ssn2 = general["Social security number - SP"] || "";
+            document.getElementById("spouse_ssn").value = maskSSN(ssn2);
             document.getElementById("spouse_dob").value = general["Date of birth - SP"] || "";
 
 
@@ -437,6 +481,8 @@
             const container = document.querySelector(".form-dependent");
             container.innerHTML = "";  // Xóa các form cứng ban đầu
             dependents.forEach((dep, index) => {
+                let ssn = dep["SSN"] || "";
+                let value = maskSSN(ssn);
                 const depHTML = `
             <div class="dependent-block" style="display: flex; gap: 40px; margin-bottom: 20px;">
                 <!-- Previous Year Form -->
@@ -448,7 +494,7 @@
                         </div>
                         <div class="form-group full-width">
                             <label>Social Security Number</label>
-                            <input type="text" name="ssn" disabled value="${dep["SSN"] || ""}"  />
+                            <input type="text" name="ssn" disabled value="${value}"  />
                         </div>
                     </div>
                 </form>
@@ -592,7 +638,7 @@
 
                 if (response.ok) {
                     console.log("✅ Cập nhật thành công");
-                    window.location.href = "../templete/document.html";
+                    window.location.href = "../template/document.html";
                 } else {
                     console.error("❌ API lỗi:", await response.text());
                     alert("Cập nhật thất bại!");
@@ -603,7 +649,7 @@
             }
 
 
-            // window.location.href = "../templete/document.html";
+            // window.location.href = "../template/document.html";
 
         });
 

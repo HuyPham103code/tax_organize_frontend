@@ -8,6 +8,8 @@ import { API_BASE_URL } from './utils/config.js'
 let totalEntities = 0;
 let CURRENT_RETURN_ID
 
+
+
 window.addEventListener("DOMContentLoaded", function () {
     var jsonData = localStorage.getItem('jsonData');
     if (!jsonData) {
@@ -92,7 +94,7 @@ function search_return_id() {
                 localStorage.setItem('jsonData', JSON.stringify(jsonData));
                 localStorage.setItem('importHistory', JSON.stringify(importHistory));
                 localStorage.setItem('returnID', JSON.stringify(yearInput));
-                window.location.href = "../templete/download.html";
+                window.location.href = "../template/download.html";
                 return
                 // truyền cả 2
                 renderChecklist(jsonData, importHistory);
@@ -835,7 +837,7 @@ const displayFieldMapping = {
 
 
 // document.getElementById('continue-btn').addEventListener('click', () => {
-//     window.location.href = "../templete/basic_info.html";
+//     window.location.href = "../template/basic_info.html";
 // })
 
 
@@ -912,7 +914,7 @@ function renderReturnsTable(data) {
     const tableBody = document.getElementById('list-returns-table-body');
 
     returnList.style.display = 'block';
-    tableBody.innerHTML = ''; 
+    tableBody.innerHTML = '';
     console.log(data)
     data.forEach((item) => {
         const row = document.createElement('tr');
@@ -924,7 +926,7 @@ function renderReturnsTable(data) {
         var pbcProgress = item.ImportCount > 0
             ? `${item.ImportCount}/${item.TotalEntities}`
             : 'Not Generated';
-        if( item.TotalEntities == 0 && item.ImportCount > 0 ){
+        if (item.TotalEntities == 0 && item.ImportCount > 0) {
             pbcProgress = `${item.ImportCount} - New Item`
         }
 
@@ -964,7 +966,7 @@ document.getElementById('search-list-returns-btn').addEventListener('click', () 
     search_container.style.display = 'none'
     summary_container.style.display = 'none'
     // client_questionnaire.style.display = 'none'
-    toggleVisibility("tax-summary-container", "hile")
+    // toggleVisibility("tax-summary-container", "hile")
     btn.disabled = true;
     document.body.style.cursor = 'wait';
 
@@ -987,7 +989,7 @@ document.getElementById('search-list-returns-btn').addEventListener('click', () 
             returnList.style.display = 'block'
             renderReturnsTable(data.returns)
 
-            
+
 
             document.getElementById('search-container').style.display = 'block'
         })

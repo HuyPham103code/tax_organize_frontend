@@ -259,13 +259,13 @@
     <div class="container">
         <div class="navbar">
             <div class="left">
-                <a href="../templete/home.html">
+                <a href="../template/home.html">
                     <img src="../asserts/logo2.png" alt="SilverSea Logo" class="logo" />
                 </a>
             </div>
 
             <div class="center">
-                <a href="../templete/basic_info.html" class="nav-item">
+                <a href="../template/basic_info.html" class="nav-item">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M5.121 17.804A6 6 0 0112 15a6 6 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
@@ -273,7 +273,7 @@
                     Basic Info
                 </a>
 
-                <a href="../templete/document.html" class="nav-item active">
+                <a href="../template/document.html" class="nav-item active">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M12 8c-1.333 0-2 .667-2 2s.667 2 2 2 2 .667 2 2-.667 2-2 2m0-14c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8z" />
@@ -281,7 +281,7 @@
                     Upload Document
                 </a>
 
-                <a href="../templete/upload_summary.html" class="nav-item ">
+                <a href="../template/upload_summary.html" class="nav-item ">
                     <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M3 10h18M3 6h18a2 2 0 012 2v8a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2z" />
@@ -436,7 +436,7 @@
                     e.preventDefault();
                     const fileUrl = summary.dataset.url;
                     if (!fileUrl) return;
-                    window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    window.open(`../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
                 });
 
                 details.appendChild(summary);
@@ -740,7 +740,7 @@
                     e.preventDefault();
                     // const fileUrl = this.dataset.url;
                     // if (fileUrl) {
-                    //     window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    //     window.open(`../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
                     // }
                     const fileUrl = summary.dataset.url;
                     if (!fileUrl) return;
@@ -749,8 +749,8 @@
                         const textReturnID = JSON.parse(returnData); // Ví dụ: "2024IND:123456:V1"
                         console.log(textReturnID)
                     }
-                    // window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
-                    const fullUrl = `../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
+                    // window.open(`../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+                    const fullUrl = `../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
                     window.open(fullUrl, "_blank");
 
                 });

@@ -1119,8 +1119,10 @@ document.addEventListener("click", function (e) {
     if (e.target.classList.contains("delete-btn")) {
         const row = e.target.closest("tr");
         const importId = row.getAttribute("data-key");
+        const firstTdValue = row.querySelector('td')?.textContent.trim();
+
         if (importId == '0') { return }
-        if (confirm(`Are you sure you want to delete this import - ${importId}? `)) {
+        if (confirm(`Are you sure you want to delete this import - ${firstTdValue}? `)) {
             // return
             fetch(`${API_BASE_URL}/api/cch-import/delete-import/${importId}/`, {
                 method: "DELETE",
@@ -1240,7 +1242,7 @@ function export_tax_data() {
                 console.log(response)
                 localStorage.setItem('jsonData', JSON.stringify(jsonData));
                 localStorage.setItem('importHistory', JSON.stringify(importHistory));
-                // window.location.href = "../templete/download.html";
+                // window.location.href = "../template/download.html";
                 // return
                 // truyền cả 2
                 renderChecklist(jsonData, importHistory);

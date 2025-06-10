@@ -834,3 +834,7 @@ th {
     /* xanh dương – đã cung cấp chỗ khác */
     font-weight: 600;
 }
+
+.pbclist-button-box-header > button{
+    margin-left: 5px;
+}

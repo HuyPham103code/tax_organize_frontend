@@ -2,21 +2,21 @@
 import { showUploadAlertUpload } from './utils/alertMessage.js';
 import { showLoading, hideLoading } from './utils/loadingOverlay.js';
 import { API_BASE_URL } from './utils/config.js'
-import {getReturnID} from './utils/get_data_header.js'
+import { getReturnID } from './utils/get_data_header.js'
 //=======================================================================
 var jsonData = ''
 var importHistory = ''
 var TAX_YEAR = ''
 
 document.addEventListener('DOMContentLoaded', function () {
-    
+
     jsonData = localStorage.getItem('jsonData');
     var importedHistory = ''
     importHistory = localStorage.getItem("importHistory");
     if (importHistory) {
         importedHistory = JSON.parse(importHistory);
     }
-    if( jsonData != "null"){
+    if (jsonData != "null") {
         jsonData = JSON.parse(jsonData)
         const returnHeader = jsonData.ReturnHeader || {};
         if (returnHeader) {
@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var returnid_element = document.getElementById("client-line-returnID")
         returnid_element.innerHTML = getReturnID()
     }
-    
-    
+
+
     renderChecklist(jsonData, importedHistory)
     save_attachments()
     // render return id
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var textReturnID = JSON.parse(returnData)
     console.log(textReturnID)
     document.getElementById("client-line-returnID").innerHTML = textReturnID
-    
+
 });
 
 //============================send email to client=======================
@@ -161,7 +161,7 @@ import { toggleVisibility } from './utils/toggleHide.js'
 //                         ${worksheet} (${displayText})
 //                     </label>
 //                     <div class="expand-panel">
-//                         <button class="btn-upload"><a href="../templete/document.html">Upload</a></button>
+//                         <button class="btn-upload"><a href="../template/document.html">Upload</a></button>
 //                         <button class="btn-secondary btn-na">Not Applicable</button>
 //                         <button class="btn-secondary btn-pe">Provided Elsewhere</button>
 //                     </div>
@@ -222,7 +222,7 @@ function renderChecklist(jsonData, importHistory) {
                 const isSameLink = doc.link?.toLowerCase() === fullKey.toLowerCase();
                 const isValidYear = Array.isArray(doc.data)
                     && doc.data.every(d => String(d.tax_year) === String(TAX_YEAR));
-                
+
 
                 if (isSameType && isSameLink && (isValidYear || (Object.keys(doc.data).length === 0 && doc.data.constructor === Object))) {
                     console.log("check")
@@ -247,7 +247,7 @@ function renderChecklist(jsonData, importHistory) {
                         ${worksheet} (${displayText})
                     </label>
                     <div class="expand-panel">
-                        <button class="btn-upload"><a href="../templete/document.html">Upload</a></button>
+                        <button class="btn-upload"><a href="../template/document.html">Upload</a></button>
                         <button class="btn-secondary btn-na">Not Applicable</button>
                         <button class="btn-secondary btn-pe">Provided Elsewhere</button>
                     </div>
@@ -257,7 +257,7 @@ function renderChecklist(jsonData, importHistory) {
                 // ✅ Đã matched (không cần hiện )
                 console.log(123)
             }
-            
+
         });
     }
 
@@ -330,9 +330,19 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
             status: value.status
         });
     }
+
+    const checklistItems = document.querySelectorAll("#checklist li");
+
+    checklistItems.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            item.classList.remove('highlight-missing');
+        }
+    });
+
     const jsonData = localStorage.getItem("jsonData");
 
-    if (jsonData){
+    if (jsonData) {
         const data = JSON.parse(jsonData)
         const returnHeader = data.ReturnHeader || {};
         var returnID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
@@ -340,8 +350,8 @@ document.getElementById("btn-send-to-client").addEventListener("click", () => {
     console.log("✅ Selected items:", results);
     console.log(returnID)
     console.log(results)
-    if (results.length == 0){
-        showUploadAlertUpload('success', 'Saved successfully.', 'alert-placeholder-send-client');
+    if (results.length == 0) {
+        showUploadAlertUpload('warning', `You haven't select anything.`, 'alert-placeholder-send-client');
         return
     }
 
@@ -383,7 +393,7 @@ document.getElementById("btn-send-to-client-complete").addEventListener("click",
     }
     const jsonData = localStorage.getItem("jsonData");
 
-    if (jsonData){
+    if (jsonData) {
         const data = JSON.parse(jsonData)
         const returnHeader = data.ReturnHeader || {};
         var returnID = `${returnHeader.TaxYear}${returnHeader.ReturnType}:${returnHeader.ClientID}:V${returnHeader.ReturnVersion}`;
@@ -391,15 +401,32 @@ document.getElementById("btn-send-to-client-complete").addEventListener("click",
 
     const checklistItems = document.querySelectorAll("#checklist li");
 
+    //reset warning
+    checklistItems.forEach(item => {
+        item.classList.remove('highlight-missing');
+    });
+
     console.log("✅ Selected items:", results);
     console.log(returnID)
     console.log(results)
     console.log(checklistItems.length)
     console.log(results.length)
-    if (results.length == 0){
-        showUploadAlertUpload('success', 'Saved successfully.', 'alert-placeholder-send-client');
-        return
-    } else if (results.length != checklistItems.length) {
+    // if (results.length == 0) {
+    //     showUploadAlertUpload('success', 'Saved successfully.', 'alert-placeholder-send-client');
+    //     return
+    // } else 
+    if (results.length != checklistItems.length) {
+
+        //===fix===
+        checklistItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (!checkbox.checked) {
+                item.classList.add('highlight-missing');
+            } else {
+                item.classList.remove('highlight-missing');
+            }
+        });
+
         showUploadAlertUpload('danger', 'Some items are missing.', 'alert-placeholder-send-client');
         return
     }
@@ -430,3 +457,4 @@ document.getElementById("btn-send-to-client-complete").addEventListener("click",
             console.error(err);
         });
 });
+

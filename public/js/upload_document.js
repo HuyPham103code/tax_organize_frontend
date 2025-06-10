@@ -1458,7 +1458,7 @@ document.getElementById('btn-selected-checklist').addEventListener('click', func
     console.log('✅ Checklist Summary:', summary_checklist);
     localStorage.setItem('summary_checklist', JSON.stringify(summary_checklist));
 
-    window.location.href = '../templete/upload_summary.html';
+    window.location.href = '../template/upload_summary.html';
 });
 
 //=============================handle upload pdf=============================
@@ -1717,8 +1717,8 @@ function renderUploadedDocuments(importHistory) {
                 const textReturnID = JSON.parse(returnData); // Ví dụ: "2024IND:123456:V1"
                 console.log(textReturnID)
             }
-            // window.open(`../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
-            const fullUrl = `../templete/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
+            // window.open(`../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}`, "_blank");
+            const fullUrl = `../template/detail_pdf.html?file_url=${encodeURIComponent(fileUrl)}&return_id=${encodeURIComponent(returnData)}`;
             window.open(fullUrl, "_blank");
         });
 
