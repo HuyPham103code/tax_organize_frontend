@@ -650,8 +650,7 @@ function renderChecklist(jsonData, importHistory) {
     if (jsonData.ReturnHeader) {
         const header = jsonData.ReturnHeader;
         const general = jsonData.General || {};
-        console.log("Ngo Thi Yen")
-        console.log(general)
+        
         document.getElementById("return-header-section").style.display = "block";
         document.getElementById("tax-year").textContent = header.TaxYear || "(missing)";
         TAX_YEAR = header.TaxYear
@@ -1580,3 +1579,46 @@ document.getElementById('btn-detail-json').addEventListener('click', () => {
     }
 
 })
+
+//========================================generate bbc list======================================
+const cleanText = (s) =>
+  (s || "")
+    .replace(/[^A-Za-z0-9 ]+/g, " ") // mọi ký tự ngoài a-z0-9 và space -> space
+    .replace(/\s+/g, " ")
+    .trim();
+
+const textOf = (el) => (el ? cleanText(el.textContent) : "");
+
+function exportTableToExcel() {
+  const rows = Array.from(document.querySelectorAll("table.document-table tbody tr"));
+
+  const data = rows.map((tr, i) => {
+    const uploadTd = tr.querySelector("td:nth-child(2)");
+    const importTd = tr.querySelector(".import-cch-status");
+    const cb = tr.querySelector('td:nth-child(3) input[type="checkbox"]');
+
+    return {
+      "Index": i + 1,
+      "Document Name": textOf(tr.querySelector(".doc-name")),
+      "Upload Status": textOf(uploadTd?.querySelector(".status-tag")) || textOf(uploadTd),
+      "Import To CCH": cb
+        ? (cb.disabled ? (cb.checked ? "Checked (disabled)" : "Unchecked (disabled)")
+                       : (cb.checked ? "Checked" : "Unchecked"))
+        : "",
+      "Import Status": textOf(importTd?.querySelector(".status-tag")) || textOf(importTd),
+      "Last Update": textOf(tr.querySelector(".import-cch-timeStamp")),
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws["!cols"] = Object.keys(data[0] || {}).map((k) => {
+    const maxLen = Math.max(k.length, ...data.map(r => (r[k] ? String(r[k]).length : 0)));
+    return { wch: Math.min(Math.max(maxLen + 2, 8), 60) };
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Documents");
+  XLSX.writeFile(wb, "bbclist.xlsx");
+}
+
+document.getElementById("btn-bbclist").addEventListener("click", exportTableToExcel);
